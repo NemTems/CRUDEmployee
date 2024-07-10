@@ -26,8 +26,8 @@ public class EmployeeMapper {
                 .lastName(employee.getLastName())
                 .email(employee.getEmail())
                 .operational_head(employee.getOperational_head())
-                .direct_supervisor_id(employee.getDirect_supervisor() != null ? employee.getDirect_supervisor().getId() : null)
-                .subordinate_id(employee.getSubordinate() != null ? employee.getSubordinate().getId() : null)
+                .direct_supervisor(DepartmentMapper.DirectSupervisorToDto(employee.getDirect_supervisor()))
+                .subordinate(DepartmentMapper.DirectSupervisorToDto(employee.getSubordinate()))
                 .department(DepartmentToDto(employee.getDepartment()))
                 .build();
     }
@@ -35,18 +35,13 @@ public class EmployeeMapper {
     public static Employee toEntity(EmployeeDTO employeeDTO) {
         if (employeeDTO == null) return null;
 
-        Employee supervisor = (employeeDTO.getDirect_supervisor_id() > 0) ?
-                DepartmentMapper.DirectSupervisorToEntity(employeeService.getEmployeeById(employeeDTO.getDirect_supervisor_id())) : null;
-        Employee subordinate = (employeeDTO.getSubordinate_id() > 0) ?
-                DepartmentMapper.DirectSupervisorToEntity(employeeService.getEmployeeById(employeeDTO.getSubordinate_id())) : null;
-
         return Employee.builder()
                 .firstName(employeeDTO.getFirstName())
                 .lastName(employeeDTO.getLastName())
                 .email(employeeDTO.getEmail())
                 .operational_head(employeeDTO.getOperational_head())
-                .direct_supervisor(supervisor)
-                .subordinate(subordinate)
+                .direct_supervisor(DepartmentMapper.DirectSupervisorToEntity(employeeDTO.getSubordinate()))
+                .subordinate(DepartmentMapper.DirectSupervisorToEntity(employeeDTO.getSubordinate()))
                 .department(DepartmentToEntity(employeeDTO.getDepartment()))
                 .build();
     }

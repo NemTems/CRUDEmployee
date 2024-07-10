@@ -2,6 +2,7 @@ package com.example.CATSEmployee.service.implementations;
 
 import com.example.CATSEmployee.DTO.concrete.EmployeeDTO;
 import com.example.CATSEmployee.exception.APIRequestException;
+import com.example.CATSEmployee.mapper.DepartmentMapper;
 import com.example.CATSEmployee.mapper.EmployeeMapper;
 import com.example.CATSEmployee.repository.EmployeeRepository;
 import com.example.CATSEmployee.service.interfaces.EmployeeService;
@@ -49,8 +50,8 @@ public class EmployeeServiceImpl implements EmployeeService {
             updateEmployeeDTO.setLastName(employeeDTO.getLastName());
             updateEmployeeDTO.setEmail(employeeDTO.getEmail());
             updateEmployeeDTO.setOperational_head(employeeDTO.getOperational_head());
-            updateEmployeeDTO.setDirect_supervisor_id(employeeDTO.getDirect_supervisor_id());
-            updateEmployeeDTO.setSubordinate_id(employeeDTO.getSubordinate_id());
+            updateEmployeeDTO.setDirect_supervisor(employeeDTO.getDirect_supervisor());
+            updateEmployeeDTO.setSubordinate(employeeDTO.getSubordinate());
             updateEmployeeDTO.setDepartment(employeeDTO.getDepartment());
 
             employeeRepository.save(EmployeeMapper.toEntity(updateEmployeeDTO));

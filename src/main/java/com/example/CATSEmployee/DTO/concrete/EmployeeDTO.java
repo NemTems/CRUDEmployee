@@ -14,7 +14,7 @@ public class EmployeeDTO {
     private String lastName;
     private String email;
     private Boolean operational_head;
-    private int direct_supervisor_id;
-    private int subordinate_id;
+    private EmployeeDTO direct_supervisor;
+    private EmployeeDTO subordinate;
     private DepartmentDTO department;
 }

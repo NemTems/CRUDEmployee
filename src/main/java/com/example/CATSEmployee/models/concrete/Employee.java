@@ -13,10 +13,13 @@ import lombok.*;
 @Builder
 @Entity
 public class Employee extends BaseClass {
+    @Column(nullable = false)
     private String firstName;
 
+    @Column(nullable = false)
     private String lastName;
 
+    @Column(unique = true)
     private String email;
 
     private Boolean operational_head = false;
