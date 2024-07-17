@@ -6,7 +6,9 @@ import com.example.CATSEmployee.mapper.DepartmentMapper;
 import com.example.CATSEmployee.repository.DepartmentRepository;
 import com.example.CATSEmployee.service.interfaces.DepartmentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -36,17 +38,29 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public DepartmentDTO createDepartment(DepartmentDTO departmentDTO) {
-        return DepartmentMapper.toDto(departmentRepository.save(DepartmentMapper.toEntity(departmentDTO)));
+        try {
+            return DepartmentMapper.toDto(departmentRepository.save(DepartmentMapper.toEntity(departmentDTO)));
+        }
+        catch (DataIntegrityViolationException e) {
+            throw new APIRequestException(e.getMessage(),e);
+        }
     }
+
 
     @Override
     public DepartmentDTO updateDepartment(DepartmentDTO departmentDTO, int id) {
         try {
             DepartmentDTO updateDepartmentDTO = DepartmentMapper.toDto(departmentRepository.findById(id)
                     .orElseThrow(() -> new APIRequestException("Department not found")));
-            updateDepartmentDTO.setCost_center_code(departmentDTO.getCost_center_code());
-            updateDepartmentDTO.setTribe_code(departmentDTO.getTribe_code());
-            updateDepartmentDTO.setEmployees(departmentDTO.getEmployees());
+
+            if(departmentDTO.getCost_center_code() != null)
+                updateDepartmentDTO.setCost_center_code(departmentDTO.getCost_center_code());
+
+            if(departmentDTO.getName() != null)
+                updateDepartmentDTO.setName(departmentDTO.getName());
+
+            if(!CollectionUtils.isEmpty(departmentDTO.getEmployees()))
+                updateDepartmentDTO.setEmployees(departmentDTO.getEmployees());
 
             departmentRepository.save(DepartmentMapper.toEntity(updateDepartmentDTO));
             return updateDepartmentDTO;

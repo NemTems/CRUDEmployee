@@ -2,26 +2,27 @@ package com.example.CATSEmployee.models.concrete;
 
 import com.example.CATSEmployee.models.common.BaseClass;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
+@SuperBuilder
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 public class Department extends BaseClass {
-    private String tribe_code;
+    @Column(unique = true, nullable = false)
+    private String name;
 
+    @Column(unique = true, nullable = false)
     private String cost_center_code;
 
-    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "department", cascade = CascadeType.DETACH)
     @JsonManagedReference
     private List<Employee> employees;
+
 }

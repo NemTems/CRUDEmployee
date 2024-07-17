@@ -2,16 +2,17 @@ package com.example.CATSEmployee.DTO.concrete;
 
 import com.example.CATSEmployee.models.common.BaseClass;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-import java.util.ArrayList;
 import java.util.List;
 
+@EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@SuperBuilder
 @Data
-public class DepartmentDTO {
-    private String tribe_code;
+public class DepartmentDTO extends BaseClass {
+    private String name;
     private String cost_center_code;
-    private List<EmployeeDTO> employees = new ArrayList<>();
+    private List<EmployeeDTO> employees;
 }

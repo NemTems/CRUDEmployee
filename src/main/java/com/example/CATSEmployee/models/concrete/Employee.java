@@ -5,33 +5,39 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
+@SuperBuilder
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 public class Employee extends BaseClass {
     private String firstName;
 
     private String lastName;
 
+    @Column(unique = true)
     private String email;
 
     private Boolean operational_head = false;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "subordinate")
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.DETACH, mappedBy = "direct_supervisor")
+    @JsonBackReference
+    private List<Employee> subordinates;
+
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.DETACH)
+    @JoinColumn(name = "direct_supervisor_id")
     @JsonManagedReference
     private Employee direct_supervisor;
 
-    @OneToOne(mappedBy = "direct_supervisor", cascade = CascadeType.ALL)
-    @JsonBackReference
-    private Employee subordinate;
-
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "department_employee")
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.DETACH)
+    @JoinColumn(name = "department_employee_id")
     @JsonBackReference
     private Department department;
+
 }
