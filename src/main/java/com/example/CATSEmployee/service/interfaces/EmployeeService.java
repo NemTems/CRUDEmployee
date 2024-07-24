@@ -1,7 +1,6 @@
 package com.example.CATSEmployee.service.interfaces;
 
 import com.example.CATSEmployee.DTO.concrete.EmployeeDTO;
-import com.example.CATSEmployee.models.concrete.Employee;
 
 import java.util.List;
 
@@ -11,6 +10,10 @@ public interface EmployeeService {
     EmployeeDTO getEmployeeById(int id);
 
     EmployeeDTO createEmployee(EmployeeDTO employeeDTO);
+
+    EmployeeDTO addSubordinates(List<EmployeeDTO> subordinates, int id);
+
+    EmployeeDTO removeSubordinates(List<EmployeeDTO> subordinates, int id);
 
     EmployeeDTO updateEmployee(EmployeeDTO employeeDTO, int id);
 

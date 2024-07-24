@@ -1,11 +1,12 @@
 package com.example.CATSEmployee.models.concrete;
 
 import com.example.CATSEmployee.models.common.BaseClass;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -22,7 +23,12 @@ public class Department extends BaseClass {
     private String cost_center_code;
 
     @OneToMany(mappedBy = "department", cascade = CascadeType.DETACH)
-    @JsonManagedReference
-    private List<Employee> employees;
+    @JsonBackReference
+    private List<Employee> employees = new ArrayList<>();
+
+    public void addEmployee(Employee employee) {
+        employee.setDepartment(this);
+        this.employees.add(employee);
+    }
 
 }

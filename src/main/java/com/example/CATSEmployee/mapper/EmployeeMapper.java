@@ -5,6 +5,7 @@ import com.example.CATSEmployee.models.concrete.Department;
 import com.example.CATSEmployee.models.concrete.Employee;
 import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -27,7 +28,7 @@ public class EmployeeMapper {
                         ? employee.getSubordinates().stream()
                         .map(EmployeeMapper::BasicEmployeeToDto)
                         .collect(Collectors.toList())
-                        : List.of())
+                        : new ArrayList<>())
                 .department_id(!Objects.isNull(employee.getDepartment())
                         ? employee.getDepartment().getId()
                         : 0)
@@ -63,7 +64,7 @@ public class EmployeeMapper {
                 ? employeeDTO.getSubordinates().stream()
                     .map(EmployeeMapper::BasicEmployeeToEntity)
                     .collect(Collectors.toList())
-                    : List.of()
+                    : new ArrayList<>()
         );
 
         return employee;

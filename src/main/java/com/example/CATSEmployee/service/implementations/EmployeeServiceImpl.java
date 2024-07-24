@@ -3,17 +3,14 @@ package com.example.CATSEmployee.service.implementations;
 import com.example.CATSEmployee.DTO.concrete.EmployeeDTO;
 import com.example.CATSEmployee.exception.APIRequestException;
 import com.example.CATSEmployee.mapper.EmployeeMapper;
-import com.example.CATSEmployee.models.concrete.Employee;
 import com.example.CATSEmployee.repository.EmployeeRepository;
 import com.example.CATSEmployee.service.interfaces.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,38 +35,80 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .orElseThrow(() -> new APIRequestException("Employee not found")));
     }
 
+    @Transactional
     @Override
     public EmployeeDTO createEmployee(EmployeeDTO employeeDTO) {
         try {
-            Employee employee = employeeRepository.save(EmployeeMapper.toEntity(employeeDTO));
-            EmployeeDTO savedEmployeeDTO = EmployeeMapper.toDto(employee);
-
-            if (!savedEmployeeDTO.getSubordinates().isEmpty()) { // Sets the operational head to false and direct supervisor to each subordinate of the main object
-                for(EmployeeDTO subordinate : savedEmployeeDTO.getSubordinates()) {
-                    EmployeeDTO savedSubordinate = getEmployeeById(subordinate.getId());
-                    savedSubordinate.setOperational_head(false);
-                    savedSubordinate.setDirect_supervisor_id(savedEmployeeDTO.getId());
-                    employeeRepository.save(EmployeeMapper.toEntity(savedSubordinate));
-                }
-            }
+            // Saved to get an id from db
+            EmployeeDTO savedEmployeeDTO = EmployeeMapper.toDto(employeeRepository.save(EmployeeMapper.toEntity(employeeDTO)));
 
             if (savedEmployeeDTO.getDirect_supervisor_id() == 0) {
                 savedEmployeeDTO.setOperational_head(true);
             }
-            else { // Sets an operational head to false and adds the main object as a subordinate to a referenced Employee
+            else { // Sets the operational head to false and adds the main object as a subordinate to a referenced Employee
                 savedEmployeeDTO.setOperational_head(false);
                 EmployeeDTO savedDirectSupervisor = getEmployeeById(savedEmployeeDTO.getDirect_supervisor_id());
-                List<EmployeeDTO> newSubordinates = new ArrayList<>(savedDirectSupervisor.getSubordinates());
-                newSubordinates.add(EmployeeDTO.builder()
-                        .id(savedEmployeeDTO.getId())
-                        .build());
-                savedDirectSupervisor.setSubordinates(newSubordinates);
-                updateEmployee(savedDirectSupervisor, savedDirectSupervisor.getId());
+                addSubordinates(List.of(savedEmployeeDTO), savedDirectSupervisor.getId());
             }
+            addSubordinates(savedEmployeeDTO.getSubordinates(), savedEmployeeDTO.getId());
             return savedEmployeeDTO;
         }
         catch (DataIntegrityViolationException e) {
-            throw new APIRequestException(e.getMessage(),e);
+            throw new APIRequestException("Exception occurred on attempt to create an employee" + "\nError message: " + e.getMessage(),e);
+        }
+    }
+
+    @Transactional
+    @Override
+    public EmployeeDTO addSubordinates(List<EmployeeDTO> subordinates, int id) {
+        try {
+            if (subordinates.isEmpty()) return null;
+
+            EmployeeDTO foundEmployee = getEmployeeById(id);
+
+            for (EmployeeDTO subordinate : subordinates) { // Sets the operational head to false and direct supervisor to each subordinate of the main object
+                EmployeeDTO savedSubordinate = EmployeeMapper.toDto(employeeRepository.findById(subordinate.getId())
+                        .orElseThrow(() -> new APIRequestException("Subordinate not found")));
+                try {
+                    if(!foundEmployee.hasSubordinate(savedSubordinate)) {
+                        foundEmployee.addSubordinate(savedSubordinate);
+                        employeeRepository.save(EmployeeMapper.toEntity(savedSubordinate));
+                    }
+                }
+                catch (DataIntegrityViolationException e) {
+                    throw new APIRequestException("Exception occurred on attempt to save subordinate with id: " + savedSubordinate.getId() + "\nError message: " + e.getMessage(),e);
+                }
+            }
+
+            return EmployeeMapper.toDto(employeeRepository.save(EmployeeMapper.toEntity(foundEmployee)));
+        }catch (DataIntegrityViolationException e) {
+            throw new APIRequestException("Exception occurred on attempt to save employee with id: " + id + "\nError message: " + e.getMessage(),e);
+        }
+    }
+
+    @Transactional
+    @Override
+    public EmployeeDTO removeSubordinates(List<EmployeeDTO> subordinates, int id) {
+        try {
+            EmployeeDTO foundEmployee = getEmployeeById(id);
+
+            for (EmployeeDTO subordinate : subordinates) {
+                EmployeeDTO savedSubordinate = EmployeeMapper.toDto(employeeRepository.findById(subordinate.getId())
+                        .orElseThrow(() -> new APIRequestException("Subordinate not found")));
+                try {
+                    if(!foundEmployee.hasSubordinate(savedSubordinate)) {
+                        foundEmployee.removeSubordinate(savedSubordinate);
+                        employeeRepository.save(EmployeeMapper.toEntity(savedSubordinate));
+                    }
+                } catch (DataIntegrityViolationException e) {
+                    throw new APIRequestException("Exception occurred on attempt to save subordinate with id: " + savedSubordinate.getId() + "\nError message: " + e.getMessage(), e);
+                }
+            }
+
+            return EmployeeMapper.toDto(employeeRepository.save(EmployeeMapper.toEntity(foundEmployee)));
+        }
+        catch (DataIntegrityViolationException e) {
+            throw new APIRequestException("Exception occurred on attempt to save employee with id: " + id + "\nError message: " + e.getMessage(),e);
         }
     }
 
@@ -77,8 +116,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public EmployeeDTO updateEmployee(EmployeeDTO employeeDTO, int id) {
         try {
-            EmployeeDTO updateEmployeeDTO = EmployeeMapper.toDto(employeeRepository.findById(id)
-                    .orElseThrow(() -> new APIRequestException("Employee not found")));
+            EmployeeDTO updateEmployeeDTO = getEmployeeById(id);
 
             if(employeeDTO.getFirstName() != null)
                 updateEmployeeDTO.setFirstName(employeeDTO.getFirstName());
@@ -95,25 +133,27 @@ public class EmployeeServiceImpl implements EmployeeService {
             if(employeeDTO.getDirect_supervisor_id() != 0)
                 updateEmployeeDTO.setDirect_supervisor_id(employeeDTO.getDirect_supervisor_id());
 
-            if(!Objects.isNull(employeeDTO.getSubordinates()))
-                updateEmployeeDTO.setSubordinates(employeeDTO.getSubordinates());
-
             if(employeeDTO.getDepartment_id() != 0)
                 updateEmployeeDTO.setDepartment_id(employeeDTO.getDepartment_id());
 
             employeeRepository.save(EmployeeMapper.toEntity(updateEmployeeDTO));
             return updateEmployeeDTO;
         }
-        catch (DataIntegrityViolationException | IllegalArgumentException e) {
-            throw new APIRequestException(e.getMessage() ,e);
+        catch (DataIntegrityViolationException e) {
+            throw new APIRequestException("Exception occurred on attempt to save employee with id: " + id + "\nError message: " + e.getMessage(),e);
         }
-        catch (ResponseStatusException e) {
-            throw new APIRequestException(e.getMessage(), e);
+        catch (IllegalArgumentException e) {
+            throw new APIRequestException("Wrong arguments were passed to update employee with id: " + id + "\nError message: " + e.getMessage(),e);
         }
     }
 
     @Override
     public void deleteEmployeeById(int id) {
-        employeeRepository.deleteById(id);
+        try {
+            employeeRepository.deleteById(id);
+        }
+        catch (DataIntegrityViolationException e) {
+            throw new APIRequestException("Exception occurred on attempt to delete employee with id: " + id + "\nError message: " + e.getMessage(),e);
+        }
     }
 }

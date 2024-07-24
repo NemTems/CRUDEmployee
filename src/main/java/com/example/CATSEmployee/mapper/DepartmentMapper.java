@@ -7,7 +7,8 @@ import com.example.CATSEmployee.models.concrete.Employee;
 import com.example.CATSEmployee.service.implementations.EmployeeServiceImpl;
 import org.springframework.util.CollectionUtils;
 
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -26,7 +27,7 @@ public class DepartmentMapper {
                         ? department.getEmployees().stream()
                                 .map(DepartmentMapper::EmployeeToDto)
                                 .collect(Collectors.toList())
-                        : Collections.emptyList())
+                        : new ArrayList<>())
                 .build();
     }
 
@@ -39,9 +40,9 @@ public class DepartmentMapper {
                 .name(departmentDTO.getName())
                 .employees(!CollectionUtils.isEmpty(departmentDTO.getEmployees())
                         ? departmentDTO.getEmployees().stream()
-                                .map(DepartmentMapper::EmployeeToEntity)
-                                .collect(Collectors.toList())
-                        : Collections.emptyList())
+                        .map(DepartmentMapper::EmployeeToEntity)
+                        .collect(Collectors.toList())
+                        : new ArrayList<>())
                 .build();
     }
 
