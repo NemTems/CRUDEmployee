@@ -61,7 +61,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public DepartmentDTO addEmployee(List<EmployeeDTO> employeeDTOList, int id) {
         try {
-            if (employeeDTOList.isEmpty()) return null;
+            if (CollectionUtils.isEmpty(employeeDTOList)) return null;
 
             DepartmentDTO departmentDTO = getDepartmentById(id);
 
@@ -79,7 +79,8 @@ public class DepartmentServiceImpl implements DepartmentService {
                 }
             }
 
-            return DepartmentMapper.toDto(departmentRepository.save(DepartmentMapper.toEntity(departmentDTO)));
+            departmentRepository.save(DepartmentMapper.toEntity(departmentDTO));
+            return departmentDTO;
 
             } catch (DataIntegrityViolationException e) {
                 throw new APIRequestException("Exception occurred on attempt to save department with id: " + id + "\nError message: " + e.getMessage(),e);
@@ -90,6 +91,8 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public DepartmentDTO removeEmployee(List<EmployeeDTO> employeeDTOList, int id) {
         try {
+            if (CollectionUtils.isEmpty(employeeDTOList)) return null;
+
             DepartmentDTO departmentDTO = getDepartmentById(id);
 
             for (EmployeeDTO employeeDTO : employeeDTOList) {
@@ -106,11 +109,13 @@ public class DepartmentServiceImpl implements DepartmentService {
                 }
             }
 
-            return DepartmentMapper.toDto(departmentRepository.save(DepartmentMapper.toEntity(departmentDTO)));
+            departmentRepository.save(DepartmentMapper.toEntity(departmentDTO));
+            return departmentDTO;
 
         } catch (DataIntegrityViolationException e) {
             throw new APIRequestException("Exception occurred on attempt to save department with id: " + id + "\nError message: " + e.getMessage(),e);
-        }    }
+        }
+    }
 
     @Override
     public DepartmentDTO updateDepartment(DepartmentDTO departmentDTO, int id) {

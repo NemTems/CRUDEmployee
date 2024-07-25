@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -62,7 +63,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public EmployeeDTO addSubordinates(List<EmployeeDTO> subordinates, int id) {
         try {
-            if (subordinates.isEmpty()) return null;
+            if (CollectionUtils.isEmpty(subordinates)) return null;
 
             EmployeeDTO foundEmployee = getEmployeeById(id);
 
@@ -90,6 +91,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public EmployeeDTO removeSubordinates(List<EmployeeDTO> subordinates, int id) {
         try {
+            if (CollectionUtils.isEmpty(subordinates)) return null;
+
             EmployeeDTO foundEmployee = getEmployeeById(id);
 
             for (EmployeeDTO subordinate : subordinates) {
