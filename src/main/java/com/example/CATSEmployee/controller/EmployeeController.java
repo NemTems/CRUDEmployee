@@ -24,7 +24,7 @@ public class EmployeeController {
         return new ResponseEntity<>(employeeService.getAllEmployees(), HttpStatus.OK);
     }
 
-    @GetMapping("/showEmployee/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<EmployeeDTO> showEmployee(@PathVariable int id) {
         return new ResponseEntity<>(employeeService.getEmployeeById(id), HttpStatus.OK);
     }
@@ -34,12 +34,21 @@ public class EmployeeController {
         return new ResponseEntity<>(employeeService.createEmployee(employeeDTO), HttpStatus.CREATED);
     }
 
-    @PutMapping("/update/{id}")
+    @PatchMapping("/{id}/update")
     public ResponseEntity<EmployeeDTO> updateEmployee(@RequestBody EmployeeDTO employeeDTO, @PathVariable int id) {
         return new ResponseEntity<>(employeeService.updateEmployee(employeeDTO, id), HttpStatus.OK);
     }
 
-    @DeleteMapping("/deleteById/{id}")
+    @PutMapping("/{id}/add/subordinates")
+    public ResponseEntity<EmployeeDTO> addSubordinatesToEmployee(@RequestBody List<EmployeeDTO> subordinates, @PathVariable int id) {
+        return new ResponseEntity<>(employeeService.addSubordinates(subordinates, id), HttpStatus.OK);
+    }
+
+    @PutMapping("/{id}/remove/subordinates")
+    public ResponseEntity<EmployeeDTO> removeSubordinateFromEmployee(@RequestBody List<EmployeeDTO> subordinates, @PathVariable int id) {
+        return new ResponseEntity<>(employeeService.removeSubordinates(subordinates, id), HttpStatus.OK);
+    }
+    @DeleteMapping("/{id}/delete")
     public ResponseEntity<Void> deleteEmployee(@PathVariable int id) {
         employeeService.deleteEmployeeById(id);
         return new ResponseEntity<>(HttpStatus.OK);
