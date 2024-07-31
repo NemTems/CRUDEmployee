@@ -26,9 +26,4 @@ public class Department extends BaseClass {
     @JsonBackReference
     private List<Employee> employees = new ArrayList<>();
 
-    public void addEmployee(Employee employee) {
-        employee.setDepartment(this);
-        this.employees.add(employee);
-    }
-
 }

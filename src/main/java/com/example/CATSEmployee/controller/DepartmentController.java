@@ -24,7 +24,7 @@ public class DepartmentController {
     }
 
     @GetMapping("/{id}")
-    private ResponseEntity<DepartmentDTO> showEmployeeDepartment(@PathVariable int id) {
+    private ResponseEntity<DepartmentDTO> showDepartment(@PathVariable int id) {
         return new ResponseEntity<>(departmentService.getDepartmentById(id), HttpStatus.OK);
     }
 

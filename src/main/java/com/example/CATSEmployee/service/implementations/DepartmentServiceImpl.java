@@ -5,6 +5,7 @@ import com.example.CATSEmployee.DTO.concrete.EmployeeDTO;
 import com.example.CATSEmployee.exception.APIRequestException;
 import com.example.CATSEmployee.mapper.DepartmentMapper;
 import com.example.CATSEmployee.mapper.EmployeeMapper;
+import com.example.CATSEmployee.models.concrete.Department;
 import com.example.CATSEmployee.repository.DepartmentRepository;
 import com.example.CATSEmployee.repository.EmployeeRepository;
 import com.example.CATSEmployee.service.interfaces.DepartmentService;
@@ -48,9 +49,11 @@ public class DepartmentServiceImpl implements DepartmentService {
     public DepartmentDTO createDepartment(DepartmentDTO departmentDTO) {
         try {
             DepartmentDTO savedDepartment = DepartmentMapper.toDto(departmentRepository.save(DepartmentMapper.toEntity(departmentDTO)));
+
             addEmployee(departmentDTO.getEmployees(), savedDepartment.getId());
 
-            return DepartmentMapper.toDto(departmentRepository.save(DepartmentMapper.toEntity(savedDepartment)));
+            departmentRepository.save(DepartmentMapper.toEntity(savedDepartment));
+            return savedDepartment;
         }
         catch (DataIntegrityViolationException e) {
             throw new APIRequestException("Exception occurred on attempt to create an employee" + "\nError message: " + e.getMessage(),e);

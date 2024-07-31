@@ -52,6 +52,8 @@ public class EmployeeServiceImpl implements EmployeeService {
                 addSubordinates(List.of(savedEmployeeDTO), savedDirectSupervisor.getId());
             }
             addSubordinates(savedEmployeeDTO.getSubordinates(), savedEmployeeDTO.getId());
+
+            employeeRepository.save(EmployeeMapper.toEntity(savedEmployeeDTO));
             return savedEmployeeDTO;
         }
         catch (DataIntegrityViolationException e) {
@@ -80,8 +82,9 @@ public class EmployeeServiceImpl implements EmployeeService {
                     throw new APIRequestException("Exception occurred on attempt to save subordinate with id: " + savedSubordinate.getId() + "\nError message: " + e.getMessage(),e);
                 }
             }
+            employeeRepository.save(EmployeeMapper.toEntity(foundEmployee));
+            return foundEmployee;
 
-            return EmployeeMapper.toDto(employeeRepository.save(EmployeeMapper.toEntity(foundEmployee)));
         }catch (DataIntegrityViolationException e) {
             throw new APIRequestException("Exception occurred on attempt to save employee with id: " + id + "\nError message: " + e.getMessage(),e);
         }
@@ -108,7 +111,8 @@ public class EmployeeServiceImpl implements EmployeeService {
                 }
             }
 
-            return EmployeeMapper.toDto(employeeRepository.save(EmployeeMapper.toEntity(foundEmployee)));
+            employeeRepository.save(EmployeeMapper.toEntity(foundEmployee));
+            return foundEmployee;
         }
         catch (DataIntegrityViolationException e) {
             throw new APIRequestException("Exception occurred on attempt to save employee with id: " + id + "\nError message: " + e.getMessage(),e);

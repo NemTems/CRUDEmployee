@@ -13,9 +13,9 @@ import java.util.stream.Collectors;
 public class EmployeeMapper {
 
     public static EmployeeDTO toDto(Employee employee) {
-        if (employee == null) return null;
+        if (Objects.isNull( employee)) return null;
 
-            return EmployeeDTO.builder()
+        return EmployeeDTO.builder()
                 .id(employee.getId())
                 .firstName(employee.getFirstName())
                 .lastName(employee.getLastName())
@@ -36,7 +36,7 @@ public class EmployeeMapper {
     }
 
     public static Employee toEntity(EmployeeDTO employeeDTO) {
-        if (employeeDTO == null) return null;
+        if (Objects.isNull(employeeDTO)) return null;
 
         Employee employee = Employee.builder()
                 .id(employeeDTO.getId())
@@ -70,8 +70,7 @@ public class EmployeeMapper {
         return employee;
     }
 
-    public static EmployeeDTO BasicEmployeeToDto(Employee employee) {
-        if (employee == null) return null;
+    private static EmployeeDTO BasicEmployeeToDto(Employee employee) {
 
         return EmployeeDTO.builder()
                 .id(employee.getId())
@@ -85,8 +84,7 @@ public class EmployeeMapper {
                 .build();
     }
 
-    public static Employee BasicEmployeeToEntity(EmployeeDTO employeeDTO) {
-        if (employeeDTO == null) return null;
+    private static Employee BasicEmployeeToEntity(EmployeeDTO employeeDTO) {
 
         Employee employee = Employee.builder()
                 .id(employeeDTO.getId())

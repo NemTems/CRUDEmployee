@@ -2,6 +2,7 @@ package com.example.CATSEmployee.Service;
 
 import com.example.CATSEmployee.DTO.concrete.DepartmentDTO;
 import com.example.CATSEmployee.DTO.concrete.EmployeeDTO;
+import com.example.CATSEmployee.exception.APIRequestException;
 import com.example.CATSEmployee.models.concrete.Department;
 import com.example.CATSEmployee.models.concrete.Employee;
 import com.example.CATSEmployee.repository.DepartmentRepository;
@@ -15,8 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,11 +34,9 @@ public class DepartmentServiceTest {
     @InjectMocks
     private DepartmentServiceImpl departmentService;
 
-    private DepartmentDTO departmentOneDTO;
-    private DepartmentDTO departmentTwoDTO;
+    private DepartmentDTO departmentDTO;
 
-    private Department departmentOne;
-    private Department departmentTwo;
+    private Department department;
 
     private EmployeeDTO employeeDTO;
 
@@ -45,24 +44,14 @@ public class DepartmentServiceTest {
 
     @BeforeEach
     public void setUp(){
-        departmentOneDTO = DepartmentDTO.builder()
+        departmentDTO = DepartmentDTO.builder()
                 .name("Finance")
                 .cost_center_code("FIN001")
                 .build();
 
-        departmentTwoDTO = DepartmentDTO.builder()
-                .name("Human Resources")
-                .cost_center_code("HR001")
-                .build();
-
-        departmentOne = Department.builder()
+        department = Department.builder()
                 .name("Finance")
                 .cost_center_code("FIN001")
-                .build();
-
-        departmentTwo = Department.builder()
-                .name("Human Resources")
-                .cost_center_code("HR001")
                 .build();
 
         employeeDTO = EmployeeDTO.builder()
@@ -78,61 +67,105 @@ public class DepartmentServiceTest {
                 .build();
     }
 
-    @Test
-    public void DepartmentService_CreateDepartmentTest_Created(){
-        when(departmentRepository.save(Mockito.any(Department.class))).thenReturn(departmentOne);
-
-        DepartmentDTO savedDepartment = departmentService.createDepartment(departmentOneDTO);
-
-        Assertions.assertNotNull(savedDepartment);
-        Assertions.assertEquals(departmentOneDTO.getName(), savedDepartment.getName());
-        Assertions.assertEquals(departmentOneDTO.getCost_center_code(), savedDepartment.getCost_center_code());
-        Assertions.assertEquals(new ArrayList<>(), savedDepartment.getEmployees());
-    }
 
     @Test
-    public void DepartmentService_GetAllDepartmentsTest_AllDepartments(){
-        List<Department> departmentList = List.of(departmentOne,departmentTwo);
+    public void getAllDepartments_ShouldReturnAllDepartments_ListOfDepartments(){
+        List<Department> departmentList = List.of(department);
 
         when(departmentRepository.findAll()).thenReturn(departmentList);
 
         List<DepartmentDTO> departmentDTOList = departmentService.getAllDepartments();
 
         Assertions.assertNotNull(departmentDTOList);
-        Assertions.assertEquals(departmentOneDTO.getId(), departmentDTOList.getFirst().getId());
-        Assertions.assertEquals(departmentOneDTO.getName(), departmentDTOList.getFirst().getName());
-        Assertions.assertEquals(departmentTwoDTO.getId(), departmentDTOList.getLast().getId());
-        Assertions.assertEquals(departmentTwoDTO.getName(), departmentDTOList.getLast().getName());
+        Assertions.assertEquals(department.getId(), departmentDTOList.getFirst().getId());
+        Assertions.assertEquals(department.getName(), departmentDTOList.getFirst().getName());
     }
 
     @Test
-    public void DepartmentService_GetDepartmentById_OneDepartment(){
-        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.ofNullable(departmentOne));
+    public void getDepartmentById_ShouldReturnDepartment_SpecificDepartment(){
+        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.ofNullable(department));
 
         DepartmentDTO foundDepartment = departmentService.getDepartmentById(1);
 
         Assertions.assertNotNull(foundDepartment);
-        Assertions.assertEquals(departmentOne.getName(), foundDepartment.getName());
+        Assertions.assertEquals(department.getName(), foundDepartment.getName());
     }
 
     @Test
-    public void DepartmentService_UpdateDepartmentById_UpdatedDepartment(){
-        when(departmentRepository.save(Mockito.any(Department.class))).thenReturn(departmentOne);
-        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.ofNullable(departmentOne));
+    public void getDepartmentById_ShouldThrowException_WhenEmployeeNotFound() {
+        when(departmentRepository.findById(1)).thenReturn(Optional.empty());
+
+        Assertions.assertThrows(APIRequestException.class, () -> {
+            departmentService.getDepartmentById(1);
+        });
+
+        verify(departmentRepository, times(1)).findById(1);
+    }
+
+    @Test
+    public void createDepartment_ShouldCreateNewDepartment_NewDepartment(){
+        when(departmentRepository.save(Mockito.any(Department.class))).thenReturn(department);
+
+        DepartmentDTO createdDepartment = departmentService.createDepartment(departmentDTO);
+
+        Assertions.assertNotNull(createdDepartment);
+        Assertions.assertEquals(departmentDTO.getName(), createdDepartment.getName());
+    }
+
+
+    @Test
+    public void createDepartment_ShouldThrowException_WhenDepartmentSaveFails() {
+        when(departmentRepository.save(any(Department.class))).thenThrow(new DataIntegrityViolationException("Error saving department"));
+
+        APIRequestException exception = Assertions.assertThrows(APIRequestException.class, () -> {
+            departmentService.createDepartment(departmentDTO);
+        });
+
+        Assertions.assertTrue(exception.getMessage().contains("Exception occurred on attempt to create an employee"));
+    }
+
+    @Test
+    public void updateDepartment_ShouldUpdateDepartment_UpdatedDepartment(){
+        when(departmentRepository.save(Mockito.any(Department.class))).thenReturn(department);
+        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.ofNullable(department));
 
         DepartmentDTO newDepartment = DepartmentDTO.builder()
                 .name("New Department")
+                .cost_center_code("NWD202")
+                .employees(List.of(employeeDTO))
                 .build();
 
         DepartmentDTO updatedDepartment = departmentService.updateDepartment(newDepartment, 1);
 
         Assertions.assertNotNull(updatedDepartment);
         Assertions.assertEquals(newDepartment.getName(), updatedDepartment.getName());
-        Assertions.assertEquals(departmentOne.getCost_center_code(), updatedDepartment.getCost_center_code());
+        Assertions.assertEquals(newDepartment.getCost_center_code(), updatedDepartment.getCost_center_code());
+    }
+    @Test
+    public void updateDepartment_ShouldThrowDBException_WhenDepartmentSaveFails(){
+        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.ofNullable(department));
+        when(departmentRepository.save(Mockito.any(Department.class))).thenThrow(new DataIntegrityViolationException("Error saving department"));
+
+        APIRequestException exception = Assertions.assertThrows(APIRequestException.class, () -> {
+            departmentService.updateDepartment(DepartmentDTO.builder().build(), 1);
+        });
+
+        Assertions.assertTrue(exception.getMessage().contains("Exception occurred on attempt to save department with id"));
     }
 
     @Test
-    public void DepartmentService_DeleteDepartmentById_Nothing(){
+    public void updateDepartment_ShouldThrowIllegalArgException_WhenDepartmentSaveFails(){
+        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.ofNullable(department));
+        when(departmentRepository.save(Mockito.any(Department.class))).thenThrow(new IllegalArgumentException("Wrong arguments"));
+
+        APIRequestException exception = Assertions.assertThrows(APIRequestException.class, () -> {
+            departmentService.updateDepartment(departmentDTO, 1);
+        });
+
+        Assertions.assertTrue(exception.getMessage().contains("Wrong arguments were passed to update department with id"));
+    }
+    @Test
+    public void deleteDepartmentById_ShouldDeleteDepartment_Nothing(){
         doNothing().when(departmentRepository).deleteById(Mockito.anyInt());
 
         departmentService.deleteDepartmentById(1);
@@ -141,26 +174,75 @@ public class DepartmentServiceTest {
     }
 
     @Test
-    public void DepartmentService_AddEmployeeToDepartmentById_UpdatedDepartment(){
+    public void addEmployee_ShouldAddEmployeeToDepartment_UpdatedDepartment(){
         when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.ofNullable(employee));
         when(employeeRepository.save(Mockito.any(Employee.class))).thenReturn(employee);
 
-        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.ofNullable(departmentOne));
-        when(departmentRepository.save(Mockito.any(Department.class))).thenReturn(departmentOne);
+        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.ofNullable(department));
+        when(departmentRepository.save(Mockito.any(Department.class))).thenReturn(department);
 
         DepartmentDTO updatedDepartment = departmentService.addEmployee(List.of(employeeDTO), 1);
 
+        verify(employeeRepository, times(1)).findById(Mockito.anyInt());
+        verify(employeeRepository, times(1)).save(Mockito.any(Employee.class));
+        verify(departmentRepository, times(1)).findById(Mockito.anyInt());
+        verify(departmentRepository, times(1)).save(Mockito.any(Department.class));
+
         Assertions.assertNotNull(updatedDepartment);
-        Assertions.assertEquals(departmentOneDTO.getName(),updatedDepartment.getName());
+        Assertions.assertEquals(departmentDTO.getName(),updatedDepartment.getName());
         Assertions.assertFalse(updatedDepartment.getEmployees().isEmpty());
     }
+
     @Test
-    public void DepartmentService_RemoveEmployeeToDepartmentById_UpdatedDepartment(){
+    public void addEmployee_ShouldThrowException_WhenEmployeeNotFound() {
+        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(new Department()));
+        when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.empty());
+
+        Assertions.assertThrows(APIRequestException.class, () -> {
+            departmentService.addEmployee(List.of(employeeDTO), 1);
+        });
+
+        verify(departmentRepository, times(1)).findById(Mockito.anyInt());
+        verify(employeeRepository, times(1)).findById(Mockito.anyInt());
+    }
+
+    @Test
+    public void addEmployee_ShouldThrowException_WhenEmployeeSaveFails() {
+        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(department));
+        when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(employee));
+
+        when(employeeRepository.save(any(Employee.class))).thenThrow(new DataIntegrityViolationException("Error saving employee"));
+
+        APIRequestException exception = Assertions.assertThrows(APIRequestException.class, () -> {
+            departmentService.addEmployee(List.of(employeeDTO), 1);
+        });
+
+        Assertions.assertTrue(exception.getMessage().contains("Exception occurred on attempt to save employee with id:"));
+    }
+
+    @Test
+    public void addEmployee_ShouldThrowException_WhenDepartmentSaveFails() {
+        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(department));
+        when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(employee));
+
+        when(employeeRepository.save(any(Employee.class))).thenReturn(employee);
+
+        when(departmentRepository.save(any(Department.class))).thenThrow(new DataIntegrityViolationException("Error saving department"));
+
+        APIRequestException exception = Assertions.assertThrows(APIRequestException.class, () -> {
+            departmentService.addEmployee(List.of(employeeDTO), 1);
+        });
+
+        Assertions.assertTrue(exception.getMessage().contains("Exception occurred on attempt to save department with id:"));
+    }
+
+    @Test
+    public void removeEmployee_ShouldRemoveEmployeeFromDepartment_UpdatedDepartment(){
         when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.ofNullable(employee));
         when(employeeRepository.save(Mockito.any(Employee.class))).thenReturn(employee);
 
-        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.ofNullable(departmentTwo));
-        when(departmentRepository.save(Mockito.any(Department.class))).thenReturn(departmentTwo);
+        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.ofNullable(department));
+        when(departmentRepository.save(Mockito.any(Department.class))).thenReturn(department);
 
         DepartmentDTO updatedDepartment = departmentService.addEmployee(List.of(employeeDTO), 1);
         Assertions.assertFalse(updatedDepartment.getEmployees().isEmpty());
@@ -173,7 +255,56 @@ public class DepartmentServiceTest {
         verify(employeeRepository, times(2)).save(Mockito.any(Employee.class));
 
         Assertions.assertNotNull(updatedDepartment);
-        Assertions.assertEquals(departmentTwo.getName(),updatedDepartment.getName());
+        Assertions.assertEquals(department.getName(),updatedDepartment.getName());
         Assertions.assertTrue(updatedDepartment.getEmployees().isEmpty());
+    }
+
+    @Test void removeEmployee_ShouldReturnNull_Null(){
+        DepartmentDTO updatedDepartment = departmentService.removeEmployee(List.of(), 1);
+
+        Assertions.assertNull(updatedDepartment);
+    }
+
+    @Test
+    public void removeEmployee_ShouldThrowException_WhenEmployeeNotFound() {
+        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(new Department()));
+        when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.empty());
+
+        Assertions.assertThrows(APIRequestException.class, () -> {
+            departmentService.removeEmployee(List.of(employeeDTO), 1);
+        });
+
+        verify(departmentRepository, times(1)).findById(Mockito.anyInt());
+        verify(employeeRepository, times(1)).findById(Mockito.anyInt());
+    }
+
+    @Test
+    public void removeEmployee_ShouldThrowException_WhenEmployeeSaveFails() {
+        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(department));
+        when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(employee));
+
+        when(employeeRepository.save(any(Employee.class))).thenThrow(new DataIntegrityViolationException("Error"));
+
+        APIRequestException exception = Assertions.assertThrows(APIRequestException.class, () -> {
+            departmentService.removeEmployee(List.of(employeeDTO), 1);
+        });
+
+        Assertions.assertTrue(exception.getMessage().contains("Exception occurred on attempt to save employee with id:"));
+    }
+
+    @Test
+    public void removeEmployee_ShouldThrowException_WhenDepartmentSaveFails() {
+        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(department));
+        when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(employee));
+
+        when(employeeRepository.save(any(Employee.class))).thenReturn(employee);
+
+        when(departmentRepository.save(any(Department.class))).thenThrow(new DataIntegrityViolationException("Error saving department"));
+
+        APIRequestException exception = Assertions.assertThrows(APIRequestException.class, () -> {
+            departmentService.removeEmployee(List.of(employeeDTO), 1);
+        });
+
+        Assertions.assertTrue(exception.getMessage().contains("Exception occurred on attempt to save department with id:"));
     }
 }

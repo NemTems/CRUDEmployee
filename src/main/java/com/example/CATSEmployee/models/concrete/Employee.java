@@ -26,11 +26,11 @@ public class Employee extends BaseClass {
     @Column(unique = true)
     private String email;
 
-    private Boolean operational_head = true;
+    private Boolean operational_head = false;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.DETACH, mappedBy = "direct_supervisor")
     @JsonBackReference
-    private List<Employee> subordinates;
+    private List<Employee> subordinates = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.DETACH)
     @JoinColumn(name = "direct_supervisor_id")
@@ -42,8 +42,4 @@ public class Employee extends BaseClass {
     @JsonManagedReference
     private Department department;
 
-    public void addSubordinate(Employee employee) {
-        employee.direct_supervisor = this;
-        this.subordinates.add(employee);
-    }
 }

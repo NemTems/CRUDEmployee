@@ -17,7 +17,7 @@ public class DepartmentMapper {
     private static EmployeeServiceImpl employeeService;
 
     public static DepartmentDTO toDto(Department department) {
-        if (department == null) return null;
+        if (Objects.isNull(department)) return null;
 
         return DepartmentDTO.builder()
                 .id(department.getId())
@@ -32,7 +32,7 @@ public class DepartmentMapper {
     }
 
     public static Department toEntity(DepartmentDTO departmentDTO) {
-        if (departmentDTO == null) return null;
+        if(Objects.isNull(departmentDTO)) return null;
 
         return Department.builder()
                 .id(departmentDTO.getId())
@@ -47,7 +47,6 @@ public class DepartmentMapper {
     }
 
     private static EmployeeDTO EmployeeToDto(Employee employee) {
-        if (employee == null) return null;
 
         return EmployeeDTO.builder()
                 .id(employee.getId())
@@ -62,7 +61,6 @@ public class DepartmentMapper {
     }
 
     private static Employee EmployeeToEntity(EmployeeDTO employeeDTO) {
-        if (employeeDTO == null) return null;
 
         return Employee.builder()
                 .id(employeeDTO.getId())
