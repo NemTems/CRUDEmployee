@@ -90,7 +90,7 @@ public class EmployeeControllerTest {
         when(employeeService.updateEmployee(Mockito.any(EmployeeDTO.class), Mockito.anyInt()))
                 .thenReturn(employeeDTO);
 
-        ResultActions response = mockMvc.perform(patch("/api/employee/1/update")
+        ResultActions response = mockMvc.perform(put("/api/employee/1/update")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(employeeDTO)));
 

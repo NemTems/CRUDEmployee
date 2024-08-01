@@ -34,7 +34,7 @@ public class EmployeeController {
         return new ResponseEntity<>(employeeService.createEmployee(employeeDTO), HttpStatus.CREATED);
     }
 
-    @PatchMapping("/{id}/update")
+    @PutMapping("/{id}/update")
     public ResponseEntity<EmployeeDTO> updateEmployee(@RequestBody EmployeeDTO employeeDTO, @PathVariable int id) {
         return new ResponseEntity<>(employeeService.updateEmployee(employeeDTO, id), HttpStatus.OK);
     }
