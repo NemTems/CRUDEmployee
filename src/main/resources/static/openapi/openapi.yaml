@@ -162,15 +162,19 @@ paths:
             'application/json':
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/failedToFindSubordinate"
+                  - $ref: "#/components/schemas/failedToFindEmployee"
                   - $ref: "#/components/schemas/failedToSaveEmployee"
+                  - $ref: "#/components/schemas/wrongArgumentsPassed"
   /employee/{id}/add/subordinates:
     put:
       tags:
         - Employee API
       operationId: addSubordinatesToEmployee
-      summary: Adds a subordinate to the specific employee by id.
-      description: Subordinate and employee should already exist in the database. In the request, only "id" field should be filled, as it refers to an existing employee. Use this endpoint when you need to  
+      summary: Adds a subordinate to a specific employee by id.
+      description:
+        Subordinate is an employee that is connected to it's direct supervisor which is also an employee. Subordinate and employee 
+        should already exist in the database. In the request, only "id" field should be filled, as it refers to an existing employee.
+        Use this endpoint when you need to add an employee as a subordinate to other employee.
       parameters:
         - name: id
           in: path
@@ -182,9 +186,8 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: "#/components/schemas/employeeRequest"
+              type: object
+              $ref: "#/components/schemas/subordinates"
         required: true
       responses:
         "200":
@@ -192,12 +195,28 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: "#/components/schemas/subordinates"
+                $ref: "#/components/schemas/employeeWithSubordinates"
+        "400":
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/failedToFindEmployee"
+                  - $ref: "#/components/schemas/failedToFindSubordinate"
+                  - $ref: "#/components/schemas/failedToSaveSubordinate"
+                  - $ref: "#/components/schemas/failedToSaveEmployee"
   /employee/{id}/remove/subordinates:
     put:
       tags:
       - Employee API
       operationId: removeSubordinateFromEmployee
+      summary: Removes a subordinate from a specific employee by id.
+      description:
+        Subordinate is an employee connected to it's direct supervisor which is also an employee. Subordinate and employee
+        should already exist in the database, otherwise exception will occur. In the request, only "id" field should be 
+        filled, as it refers to an existing employee. If a requested subordinate is not a part of chosen employee, than no changes will happen. 
+        Use this endpoint when you need to remove a subordinate from other employee.
       parameters:
       - name: id
         in: path
@@ -209,17 +228,26 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: "#/components/schemas/employeeRequest"
+              type: object
+              $ref: "#/components/schemas/subordinates"
         required: true
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            'application/json':
               schema:
-                $ref: "#/components/schemas/subordinates"
+                $ref: "#/components/schemas/employeeRequest"
+        "400":
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/failedToFindEmployee"
+                  - $ref: "#/components/schemas/failedToFindSubordinate"
+                  - $ref: "#/components/schemas/failedToSaveSubordinate"
+                  - $ref: "#/components/schemas/failedToSaveEmployee"
   /department/{id}/update:
     put:
       tags:
@@ -305,6 +333,8 @@ paths:
       tags:
       - Employee API
       operationId: deleteEmployee
+      summary: Delete an employee by id
+      description:
       parameters:
       - name: id
         in: path
@@ -334,8 +364,14 @@ components:
   schemas:
     employeeRequest:
       $ref: "./schemas/employee/employeeRequest.yaml"
-    employeeResponse:
-      $ref: "./schemas/employee/employeeResponse.yaml"
+    employeeWithSubordinates:
+      $ref: "./schemas/employee/employeeWithSubordinate.yaml"
+    updatedEmployee:
+      $ref: "./schemas/employee/updatedEmployee.yaml"
+    updateRequestEmployee:
+      $ref: "./schemas/employee/updateRequestEmployee.yaml"
+    subordinates:
+      $ref: "./schemas/employee/subordinates.yaml"
     department:
       $ref: "./schemas/department.yaml"
     failedToCreateEmployee:
@@ -350,9 +386,4 @@ components:
       $ref: "./schemas/errors/employeeErrors.yaml#/failedToFindSubordinate"
     wrongArgumentsPassed:
       $ref: "./schemas/errors/employeeErrors.yaml#/wrongArgumentsPassed"
-    updatedEmployee:
-      $ref: "./schemas/employee/updatedEmployee.yaml"
-    updateRequestEmployee:
-      $ref: "./schemas/employee/updateRequestEmployee.yaml"
-    subordinates:
-      $ref: "./schemas/employee/subordinates.yaml"
+
