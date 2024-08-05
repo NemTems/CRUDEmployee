@@ -1,16 +1,18 @@
 type: object
-description:
 required:
   - name
   - cost_center_code
 properties:
   name:
     type: string
-    example: IT Department
+    example: Human Resources
   cost_center_code:
     type: string
-    example: IT001
+    example: HR001
   employees:
     type: array
     items:
-      $ref: "./employeeRequest.yaml"
+      type: object
+      properties:
+        id:
+          example: 1

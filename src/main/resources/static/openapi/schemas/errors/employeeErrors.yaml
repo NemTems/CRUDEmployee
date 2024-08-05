@@ -25,6 +25,15 @@ failedToFindEmployee:
     message:
       type: string
       example: "Employee not found"
+failedToDeleteEmployee:
+  type: object
+  properties:
+    code:
+      type: integer
+      example: 400
+    message:
+      type: string
+      example: "Exception occurred on attempt to delete employee"
 
 failedToSaveSubordinate:
   type: object

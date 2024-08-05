@@ -2,6 +2,9 @@ openapi: 3.0.1
 info:
   title: CATS Management Service API
   version: v1
+  contact:
+    name: Andrii Kipriianov
+    email: andrii.kipriianov@bertelsmann.de
 servers:
 - url: http://localhost:8080/api/
   description: Local server
@@ -11,7 +14,7 @@ paths:
       tags:
         - Employee API
       summary: Create a new employee
-      description: Direct supervisor and subordinates are employees, that should already exist in the database. Department should also exist in database. Use this endpoint when you need to create a new employee
+      description: In the request, for subordinates only "id" field should be filled, as it refers to an existing employee. Direct supervisor and subordinates are employees, that should already exist in the database. Department should also exist in the database. Use this endpoint when you need to create a new employee
       operationId: createEmployee
       requestBody:
         content:
@@ -33,25 +36,36 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/failedToCreateEmployee"
                   - $ref: "#/components/schemas/failedToFindEmployee"
-
+                  - $ref: "#/components/schemas/failedToFindSubordinate"
+                  - $ref: "#/components/schemas/failedToSaveSubordinate"
   /api/department/create:
     post:
       tags:
         - Department API
       operationId: createDepartment
+      summary: Create a new department
+      description: In the request, for employees only "id" field should be filled, as it refers to an existing employee. Employees should already exist in the database. Use this endpoint when you need to create a new employee
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/department"
-        required: true
+              $ref: "#/components/schemas/departmentRequest"
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            'application/json':
               schema:
-                $ref: "#/components/schemas/department"
+                $ref: "#/components/schemas/departmentRequest"
+        "400":
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/failedToSaveDepartment"
+                  - $ref: "#/components/schemas/failedToFindEmployee"
+                  - $ref: "#/components/schemas/failedToSaveEmployee"
   /employee/{id}:
     get:
       tags:
@@ -72,7 +86,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: "#/components/schemas/employeeRequest"
+                $ref: "#/components/schemas/employeeWithSubordinates"
         "400":
           description: Bad request
           content:
@@ -94,14 +108,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/employeeRequest"
+                  $ref: "#/components/schemas/employeeWithSubordinates"
   /department/{id}:
     get:
       tags:
         - Department API
-      summary: Get an employee by id
+      summary: Get an department by id
       description: Department should already exist in the database. Use this endpoint when you need to find a specific department by id.
-        base
       operationId: showDepartment
       parameters:
         - name: id
@@ -112,31 +125,44 @@ paths:
             format: int32
       responses:
         "200":
-          description: Success
+          description: Ok
+          content:
+            'application/json':
+              schema:
+                type: object
+                $ref: "#/components/schemas/departmentWithEmployees"
         "400":
-          description: Fail
+          description: Bad Request
+          content:
+            'application/json':
+              schema:
+                type: object
+                $ref: "#/components/schemas/failedToFindDepartment"
   /department/showAll:
     get:
       tags:
         - Department API
-      summary: Get a list of all employees
+      summary: Get a list of all departments
       description: Use this endpoint when you need to get all departments in the database.
-        base
       operationId: showAllDepartments
       responses:
         "200":
-          description: OK
+          description: Ok
           content:
-            application/json:
+            'application/json':
               schema:
-                $ref: "#/components/schemas/department"
+                type: array
+                items:
+                  $ref: "#/components/schemas/departmentWithEmployees"
   /employee/{id}/update:
     put:
       tags:
       - Employee API
       operationId: updateEmployee
       summary: Change employee by id
-      description: Employee should already exist in the database.
+      description:
+        Only specified fields will be changed, all others will remain the same.
+        Employee should already exist in the database. Use this endpoint when you need to change employee by id.
       parameters:
       - name: id
         in: path
@@ -147,7 +173,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/updateRequestEmployee"
+              $ref: "#/components/schemas/updateEmployeeRequest"
         required: true
       responses:
         "200":
@@ -172,9 +198,9 @@ paths:
       operationId: addSubordinatesToEmployee
       summary: Adds a subordinate to a specific employee by id.
       description:
-        Subordinate is an employee that is connected to it's direct supervisor which is also an employee. Subordinate and employee 
-        should already exist in the database. In the request, only "id" field should be filled, as it refers to an existing employee.
-        Use this endpoint when you need to add an employee as a subordinate to other employee.
+        A subordinate is an employee who reports directly to a supervisor, who is also an employee. Both the subordinate
+        and the direct supervisor should already exist in the database. In the request, only the "id" field should be filled, as 
+        it refers to an existing employee. Use this endpoint to assign an employee as a subordinate to another employee.
       parameters:
         - name: id
           in: path
@@ -187,8 +213,7 @@ paths:
           application/json:
             schema:
               type: object
-              $ref: "#/components/schemas/subordinates"
-        required: true
+              $ref: "#/components/schemas/arrayRequest"
       responses:
         "200":
           description: OK
@@ -213,10 +238,10 @@ paths:
       operationId: removeSubordinateFromEmployee
       summary: Removes a subordinate from a specific employee by id.
       description:
-        Subordinate is an employee connected to it's direct supervisor which is also an employee. Subordinate and employee
-        should already exist in the database, otherwise exception will occur. In the request, only "id" field should be 
-        filled, as it refers to an existing employee. If a requested subordinate is not a part of chosen employee, than no changes will happen. 
-        Use this endpoint when you need to remove a subordinate from other employee.
+        A subordinate is an employee who reports directly to a supervisor, who is also an employee. Both the subordinate
+        and the direct supervisor should already exist in the database. In the request, only the "id" field should be filled, as 
+        it refers to an existing employee. If the specified subordinate is not currently assigned to the chosen supervisor,
+        no changes will be made. Use this endpoint to remove an employee from being a subordinate to another employee.
       parameters:
       - name: id
         in: path
@@ -229,15 +254,14 @@ paths:
           application/json:
             schema:
               type: object
-              $ref: "#/components/schemas/subordinates"
-        required: true
+              $ref: "#/components/schemas/arrayRequest"
       responses:
         "200":
           description: OK
           content:
             'application/json':
               schema:
-                $ref: "#/components/schemas/employeeRequest"
+                $ref: "#/components/schemas/employeeWithNoSubordinates"
         "400":
           description: Bad request
           content:
@@ -253,6 +277,10 @@ paths:
       tags:
       - Department API
       operationId: updateDepartment
+      summary: Change department by id
+      description:
+        Only specified fields will be changed, all others will remain the same.
+        Department should already exist in the database. Use this endpoint when you need to change department by id.
       parameters:
       - name: id
         in: path
@@ -264,47 +292,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/department"
-        required: true
+              $ref: "#/components/schemas/updateDepartmentRequest"
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            'application/json':
               schema:
-                $ref: "#/components/schemas/department"
-  /department/{id}/remove/employees:
-    put:
-      tags:
-      - Department API
-      operationId: removeEmployeesFromDepartment
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int32
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: "#/components/schemas/employeeRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
+                $ref: "#/components/schemas/updatedDepartment"
+        "400":
+          description: Bad request
           content:
-            '*/*':
+            'application/json':
               schema:
-                $ref: "#/components/schemas/department"
+                oneOf:
+                  - $ref: "#/components/schemas/failedToFindDepartment"
+                  - $ref: "#/components/schemas/failedToSaveDepartment"
+                  - $ref: "#/components/schemas/wrongArgumentsPassed"
   /department/{id}/add/employees:
     put:
       tags:
       - Department API
       operationId: addEmployeesToDepartment
+      summary: Adds an employee to a specific department by id.
+      description:
+        Both the employee and the department should already exist in the database. In the request, only the "id" field 
+        should be filled, as it refers to an existing employee. Use this endpoint to add an employee to a department.
       parameters:
       - name: id
         in: path
@@ -316,18 +329,65 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: "#/components/schemas/employeeRequest"
-        required: true
+              type: object
+              $ref: "#/components/schemas/arrayRequest"
       responses:
         "200":
           description: OK
           content:
-            '*/*':
+            'application/json':
               schema:
-                $ref: "#/components/schemas/department"
-
+                $ref: "#/components/schemas/departmentWithEmployees"
+        "400":
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/failedToFindDepartment"
+                  - $ref: "#/components/schemas/failedToFindEmployee"
+                  - $ref: "#/components/schemas/failedToSaveEmployee"
+                  - $ref: "#/components/schemas/failedToSaveDepartment"
+  /department/{id}/remove/employees:
+    put:
+      tags:
+        - Department API
+      operationId: removeEmployeesFromDepartment
+      summary: Removes an employee from a specific department by id.
+      description:
+        Both the employee and the department should already exist in the database. In the request, only the "id" field
+        should be filled, as it refers to an existing employee. If the specified employee is not currently part of the 
+        chosen department, no changes will be made. Use this endpoint to remove an employee from a specific department.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: "#/components/schemas/arrayRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/departmentWithNoEmployees"
+        "400":
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/failedToFindDepartment"
+                  - $ref: "#/components/schemas/failedToFindEmployee"
+                  - $ref: "#/components/schemas/failedToSaveEmployee"
+                  - $ref: "#/components/schemas/failedToSaveDepartment"
   /employee/{id}/delete:
     delete:
       tags:
@@ -335,6 +395,8 @@ paths:
       operationId: deleteEmployee
       summary: Delete an employee by id
       description:
+        Before deleting employee from the database, make sure that it has no direct supervisor and no subordinates.
+        Use this endpoint when you need to remove specific employee by id.
       parameters:
       - name: id
         in: path
@@ -345,11 +407,23 @@ paths:
       responses:
         "200":
           description: OK
+        "400":
+          description: Bad request
+          content:
+            "application/json":
+                schema:
+                  oneOf:
+                    - $ref: "#/components/schemas/failedToDeleteEmployee"
+                    - $ref : "#/components/schemas/failedToFindEmployee"
   /department/{id}/delete:
     delete:
       tags:
       - Department API
       operationId: deleteDepartment
+      summary: Delete a department by id
+      description:
+        Before deleting department from the database, make sure that it has no employees.
+        Use this endpoint when you need to remove specific employee by id.
       parameters:
       - name: id
         in: path
@@ -360,30 +434,60 @@ paths:
       responses:
         "200":
           description: OK
+        "400":
+          description: Bad request
+          content:
+            "application/json":
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/failedToDeleteDepartment"
+                  - $ref: "#/components/schemas/failedToFindDepartment"
 components:
   schemas:
     employeeRequest:
       $ref: "./schemas/employee/employeeRequest.yaml"
     employeeWithSubordinates:
       $ref: "./schemas/employee/employeeWithSubordinate.yaml"
+    employeeWithNoSubordinates:
+      $ref: "./schemas/employee/employeeWithNoSubordinates.yaml"
     updatedEmployee:
       $ref: "./schemas/employee/updatedEmployee.yaml"
-    updateRequestEmployee:
-      $ref: "./schemas/employee/updateRequestEmployee.yaml"
-    subordinates:
-      $ref: "./schemas/employee/subordinates.yaml"
-    department:
-      $ref: "./schemas/department.yaml"
+    updateEmployeeRequest:
+      $ref: "./schemas/employee/updateEmployeeRequest.yaml"
     failedToCreateEmployee:
       $ref: "./schemas/errors/employeeErrors.yaml#/failedToCreateEmployee"
     failedToFindEmployee:
       $ref: "./schemas/errors/employeeErrors.yaml#/failedToFindEmployee"
     failedToSaveEmployee:
       $ref: "./schemas/errors/employeeErrors.yaml#/failedToSaveEmployee"
+    failedToDeleteEmployee:
+      $ref: "./schemas/errors/employeeErrors.yaml#/failedToDeleteEmployee"
     failedToSaveSubordinate:
       $ref: "./schemas/errors/employeeErrors.yaml#/failedToSaveSubordinate"
     failedToFindSubordinate:
       $ref: "./schemas/errors/employeeErrors.yaml#/failedToFindSubordinate"
+
+    departmentRequest:
+      $ref: "./schemas/department/departmentRequest.yaml"
+    departmentWithEmployees:
+      $ref: "./schemas/department/departmentWithEmployees.yaml"
+    departmentWithNoEmployees:
+      $ref: "./schemas/department/departmentWithNoEmployees.yaml"
+    updatedDepartment:
+      $ref: "./schemas/department/updatedDepartment.yaml"
+    updateDepartmentRequest:
+      $ref: "./schemas/department/updateDepartmentRequest.yaml"
+    failedToCreateDepartment:
+      $ref: "./schemas/errors/departmentErrors.yaml#/failedToCreateDepartment"
+    failedToFindDepartment:
+      $ref: "./schemas/errors/departmentErrors.yaml#/failedToFindDepartment"
+    failedToSaveDepartment:
+      $ref: "./schemas/errors/departmentErrors.yaml#/failedToSaveDepartment"
+    failedToDeleteDepartment:
+      $ref: "./schemas/errors/departmentErrors.yaml#/failedToDeleteDepartment"
+      
+    arrayRequest:
+      $ref: "./schemas/shared/arrayRequest.yaml"
     wrongArgumentsPassed:
       $ref: "./schemas/errors/employeeErrors.yaml#/wrongArgumentsPassed"
 
