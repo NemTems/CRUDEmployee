@@ -45,22 +45,26 @@ public class DepartmentServiceTest {
     @BeforeEach
     public void setUp(){
         departmentDTO = DepartmentDTO.builder()
+                .id(1)
                 .name("Finance")
                 .cost_center_code("FIN001")
                 .build();
 
         department = Department.builder()
+                .id(1)
                 .name("Finance")
                 .cost_center_code("FIN001")
                 .build();
 
         employeeDTO = EmployeeDTO.builder()
+                .id(1)
                 .firstName("John")
                 .lastName("Doe")
                 .email("john.doe@example.com")
                 .build();
 
         employee = Employee.builder()
+                .id(1)
                 .firstName("John")
                 .lastName("Doe")
                 .email("john.doe@example.com")
@@ -121,7 +125,7 @@ public class DepartmentServiceTest {
             departmentService.createDepartment(departmentDTO);
         });
 
-        Assertions.assertTrue(exception.getMessage().contains("Exception occurred on attempt to create an employee"));
+        Assertions.assertTrue(exception.getMessage().contains("Exception occurred on attempt to create a department"));
     }
 
     @Test
@@ -238,25 +242,26 @@ public class DepartmentServiceTest {
 
     @Test
     public void removeEmployee_ShouldRemoveEmployeeFromDepartment_UpdatedDepartment(){
+        when(departmentRepository.save(Mockito.any(Department.class))).thenReturn(department);
+
+        department.setEmployees(List.of(employee));
+        Assertions.assertFalse(department.getEmployees().isEmpty());
+
+        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.ofNullable(department));
+
         when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.ofNullable(employee));
         when(employeeRepository.save(Mockito.any(Employee.class))).thenReturn(employee);
 
-        when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.ofNullable(department));
-        when(departmentRepository.save(Mockito.any(Department.class))).thenReturn(department);
+        DepartmentDTO updatedDepartment = departmentService.removeEmployee(List.of(employeeDTO), 1);
 
-        DepartmentDTO updatedDepartment = departmentService.addEmployee(List.of(employeeDTO), 1);
-        Assertions.assertFalse(updatedDepartment.getEmployees().isEmpty());
-
-        updatedDepartment = departmentService.removeEmployee(List.of(employeeDTO), 1);
-
-        verify(departmentRepository, times(2)).findById(Mockito.anyInt());
-        verify(departmentRepository, times(2)).save(Mockito.any(Department.class));
-        verify(employeeRepository, times(2)).findById(Mockito.anyInt());
-        verify(employeeRepository, times(2)).save(Mockito.any(Employee.class));
+        verify(departmentRepository, times(1)).findById(Mockito.anyInt());
+        verify(departmentRepository, times(1)).save(Mockito.any(Department.class));
+        verify(employeeRepository, times(1)).findById(Mockito.anyInt());
+        verify(employeeRepository, times(1)).save(Mockito.any(Employee.class));
 
         Assertions.assertNotNull(updatedDepartment);
         Assertions.assertEquals(department.getName(),updatedDepartment.getName());
-        Assertions.assertTrue(updatedDepartment.getEmployees().isEmpty());
+        Assertions.assertEquals(0, updatedDepartment.getEmployees().getFirst().getDirect_supervisor_id());
     }
 
     @Test void removeEmployee_ShouldReturnNull_Null(){
@@ -280,6 +285,8 @@ public class DepartmentServiceTest {
 
     @Test
     public void removeEmployee_ShouldThrowException_WhenEmployeeSaveFails() {
+        department.setEmployees(List.of(employee));
+
         when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(department));
         when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(employee));
 
@@ -294,6 +301,8 @@ public class DepartmentServiceTest {
 
     @Test
     public void removeEmployee_ShouldThrowException_WhenDepartmentSaveFails() {
+        department.setEmployees(List.of(employee));
+
         when(departmentRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(department));
         when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(employee));
 

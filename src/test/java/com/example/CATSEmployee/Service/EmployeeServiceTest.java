@@ -2,7 +2,6 @@ package com.example.CATSEmployee.Service;
 
 import com.example.CATSEmployee.DTO.concrete.EmployeeDTO;
 import com.example.CATSEmployee.exception.APIRequestException;
-import com.example.CATSEmployee.mapper.EmployeeMapper;
 import com.example.CATSEmployee.models.concrete.Employee;
 import com.example.CATSEmployee.repository.EmployeeRepository;
 import com.example.CATSEmployee.service.implementations.EmployeeServiceImpl;
@@ -218,7 +217,7 @@ public class EmployeeServiceTest {
     }
 
     @Test
-    public void addSubordinates_ShouldThrowException_DoesntHasSubordinate_WhenEmployeeSaveFails() {
+    public void addSubordinates_ShouldThrowException_DoesntHaveSubordinate_WhenSubordinateSaveFails() {
         when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(employee));
         when(employeeRepository.save(any(Employee.class))).thenThrow(new DataIntegrityViolationException("Error saving employee"));
 
@@ -230,7 +229,7 @@ public class EmployeeServiceTest {
     }
 
     @Test
-    public void addSubordinates_ShouldThrowException_HasSubordinate_WhenEmployeeSaveFails() {
+    public void addSubordinates_ShouldThrowException_HaveSubordinate_WhenEmployeeSaveFails() {
         employee.setId(1);
         employee.setSubordinates(List.of(employee));
 
@@ -246,13 +245,15 @@ public class EmployeeServiceTest {
 
     @Test
     public void removeSubordinates_ShouldRemoveSubordinatesFromEmployee_UpdatedEmployee() {
+        employee.setSubordinates(List.of(employee));
+
         when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(employee));
         when(employeeRepository.save(Mockito.any(Employee.class))).thenReturn(employee);
 
         EmployeeDTO updatedEmployee = employeeService.removeSubordinates(List.of(employeeDTO), 1);
 
         Assertions.assertNotNull(updatedEmployee);
-        Assertions.assertTrue(updatedEmployee.getSubordinates().isEmpty());
+        Assertions.assertEquals(0, updatedEmployee.getSubordinates().getFirst().getDirect_supervisor_id());
     }
 
     @Test
@@ -268,7 +269,7 @@ public class EmployeeServiceTest {
     }
 
     @Test
-    public void removeSubordinates_ShouldThrowException_DoesntHasSubordinate_WhenEmployeeSaveFails() {
+    public void removeSubordinates_ShouldThrowException_DoesntHaveSubordinate_WhenEmployeeSaveFails() {
         when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(employee));
         when(employeeRepository.save(any(Employee.class))).thenThrow(new DataIntegrityViolationException("Error saving employee"));
 
@@ -276,11 +277,11 @@ public class EmployeeServiceTest {
             employeeService.removeSubordinates(List.of(employeeDTO), 1);
         });
 
-        Assertions.assertTrue(exception.getMessage().contains("Exception occurred on attempt to save subordinate with id:"));
+        Assertions.assertTrue(exception.getMessage().contains("Exception occurred on attempt to save employee with id:"));
     }
 
     @Test
-    public void removeSubordinates_ShouldThrowException_HasSubordinate_WhenEmployeeSaveFails() {
+    public void removeSubordinates_ShouldThrowException_HaveSubordinate_WhenSubordinateSaveFails() {
         employee.setId(1);
         employee.setSubordinates(List.of(employee));
 
@@ -291,7 +292,7 @@ public class EmployeeServiceTest {
             employeeService.removeSubordinates(List.of(employeeDTO), 1);
         });
 
-        Assertions.assertTrue(exception.getMessage().contains("Exception occurred on attempt to save employee with id:"));
+        Assertions.assertTrue(exception.getMessage().contains("Exception occurred on attempt to save subordinate with id:"));
     }
 
 }
