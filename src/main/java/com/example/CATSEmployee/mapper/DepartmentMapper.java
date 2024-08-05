@@ -4,7 +4,6 @@ import com.example.CATSEmployee.DTO.concrete.DepartmentDTO;
 import com.example.CATSEmployee.DTO.concrete.EmployeeDTO;
 import com.example.CATSEmployee.models.concrete.Department;
 import com.example.CATSEmployee.models.concrete.Employee;
-import com.example.CATSEmployee.service.implementations.EmployeeServiceImpl;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -12,9 +11,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class DepartmentMapper {
-
-    private static EmployeeServiceImpl employeeService;
-
     public static DepartmentDTO toDto(Department department) {
         if (Objects.isNull(department)) return null;
 

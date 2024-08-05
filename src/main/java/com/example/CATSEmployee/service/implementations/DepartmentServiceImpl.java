@@ -5,7 +5,6 @@ import com.example.CATSEmployee.DTO.concrete.EmployeeDTO;
 import com.example.CATSEmployee.exception.APIRequestException;
 import com.example.CATSEmployee.mapper.DepartmentMapper;
 import com.example.CATSEmployee.mapper.EmployeeMapper;
-import com.example.CATSEmployee.models.concrete.Department;
 import com.example.CATSEmployee.repository.DepartmentRepository;
 import com.example.CATSEmployee.repository.EmployeeRepository;
 import com.example.CATSEmployee.service.interfaces.DepartmentService;
@@ -14,7 +13,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.server.ResponseStatusException;
 
 
 import java.util.List;
@@ -102,7 +100,7 @@ public class DepartmentServiceImpl implements DepartmentService {
                 EmployeeDTO savedEmployee = EmployeeMapper.toDto(employeeRepository.findById(employeeDTO.getId())
                         .orElseThrow(() -> new APIRequestException("Employee not found")));
                 try {
-                    if(!departmentDTO.hasEmployee(employeeDTO)) {
+                    if(departmentDTO.hasEmployee(employeeDTO)) {
                         departmentDTO.removeEmployee(savedEmployee);
                         employeeRepository.save(EmployeeMapper.toEntity(savedEmployee));
                     }
