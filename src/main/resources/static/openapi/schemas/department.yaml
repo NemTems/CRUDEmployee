@@ -1,0 +1,16 @@
+type: object
+description:
+required:
+  - name
+  - cost_center_code
+properties:
+  name:
+    type: string
+    example: IT Department
+  cost_center_code:
+    type: string
+    example: IT001
+  employees:
+    type: array
+    items:
+      $ref: "./employeeRequest.yaml"

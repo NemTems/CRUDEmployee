@@ -3,26 +3,47 @@ info:
   title: CATS Management Service API
   version: v1
 servers:
-- url: http://localhost:8080/
+- url: http://localhost:8080/api/
   description: Local server
 paths:
-  /api/employee/{id}/update:
-    put:
+  /employee/create:
+    post:
       tags:
-      - Employee API
-      operationId: updateEmployee
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int32
+        - Employee API
+      summary: Create a new employee
+      description: Direct supervisor and subordinates are employees, that should already exist in the database. Department should also exist in database. Use this endpoint when you need to create a new employee
+      operationId: createEmployee
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EmployeeDTO"
+              $ref: "#/components/schemas/employeeRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/employeeRequest"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/failedToCreateEmployee"
+                  - $ref: "#/components/schemas/failedToFindEmployee"
+
+  /api/department/create:
+    post:
+      tags:
+        - Department API
+      operationId: createDepartment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/department"
         required: true
       responses:
         "200":
@@ -30,8 +51,149 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/EmployeeDTO"
-  /api/employee/{id}/remove/subordinates:
+                $ref: "#/components/schemas/department"
+  /employee/{id}:
+    get:
+      tags:
+        - Employee API
+      summary: Get an employee by id
+      description: Employee should already exist in the database. Use this endpoint when you need to find a specific employee by id.
+      operationId: showEmployee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/employeeRequest"
+        "400":
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/failedToFindEmployee"
+  /employee/showAll:
+    get:
+      tags:
+        - Employee API
+      operationId: showAllEmployees
+      summary: Get a list of all employees
+      description: Use this endpoint when you need to get all employees in the database.
+      responses:
+        "200":
+          description: OK
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/employeeRequest"
+  /department/{id}:
+    get:
+      tags:
+        - Department API
+      summary: Get an employee by id
+      description: Department should already exist in the database. Use this endpoint when you need to find a specific department by id.
+        base
+      operationId: showDepartment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Fail
+  /department/showAll:
+    get:
+      tags:
+        - Department API
+      summary: Get a list of all employees
+      description: Use this endpoint when you need to get all departments in the database.
+        base
+      operationId: showAllDepartments
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/department"
+  /employee/{id}/update:
+    put:
+      tags:
+      - Employee API
+      operationId: updateEmployee
+      summary: Change employee by id
+      description: Employee should already exist in the database.
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/updateRequestEmployee"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/updatedEmployee"
+        "400":
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/failedToFindSubordinate"
+                  - $ref: "#/components/schemas/failedToSaveEmployee"
+  /employee/{id}/add/subordinates:
+    put:
+      tags:
+        - Employee API
+      operationId: addSubordinatesToEmployee
+      summary: Adds a subordinate to the specific employee by id.
+      description: Subordinate and employee should already exist in the database. In the request, only "id" field should be filled, as it refers to an existing employee. Use this endpoint when you need to  
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/employeeRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/subordinates"
+  /employee/{id}/remove/subordinates:
     put:
       tags:
       - Employee API
@@ -49,7 +211,7 @@ paths:
             schema:
               type: array
               items:
-                $ref: "#/components/schemas/EmployeeDTO"
+                $ref: "#/components/schemas/employeeRequest"
         required: true
       responses:
         "200":
@@ -57,35 +219,8 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/EmployeeDTO"
-  /api/employee/{id}/add/subordinates:
-    put:
-      tags:
-      - Employee API
-      operationId: addSubordinatesToEmployee
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int32
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: "#/components/schemas/EmployeeDTO"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/EmployeeDTO"
-  /api/department/{id}/update:
+                $ref: "#/components/schemas/subordinates"
+  /department/{id}/update:
     put:
       tags:
       - Department API
@@ -101,7 +236,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DepartmentDTO"
+              $ref: "#/components/schemas/department"
         required: true
       responses:
         "200":
@@ -109,8 +244,8 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/DepartmentDTO"
-  /api/department/{id}/remove/employees:
+                $ref: "#/components/schemas/department"
+  /department/{id}/remove/employees:
     put:
       tags:
       - Department API
@@ -128,7 +263,7 @@ paths:
             schema:
               type: array
               items:
-                $ref: "#/components/schemas/EmployeeDTO"
+                $ref: "#/components/schemas/employeeRequest"
         required: true
       responses:
         "200":
@@ -136,8 +271,8 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/DepartmentDTO"
-  /api/department/{id}/add/employees:
+                $ref: "#/components/schemas/department"
+  /department/{id}/add/employees:
     put:
       tags:
       - Department API
@@ -155,7 +290,7 @@ paths:
             schema:
               type: array
               items:
-                $ref: "#/components/schemas/EmployeeDTO"
+                $ref: "#/components/schemas/employeeRequest"
         required: true
       responses:
         "200":
@@ -163,112 +298,9 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/DepartmentDTO"
-  /api/employee/create:
-    post:
-      tags:
-      - Employee API
-      operationId: createEmployee
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/EmployeeDTO"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/EmployeeDTO"
-  /api/department/create:
-    post:
-      tags:
-      - Department API
-      operationId: createDepartment
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DepartmentDTO"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/DepartmentDTO"
-  /api/employee/{id}:
-    get:
-      tags:
-      - Employee API
-      operationId: showEmployee
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int32
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/EmployeeDTO"
-  /api/employee/showAll:
-    get:
-      tags:
-      - Employee API
-      operationId: showAllEmployees
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/EmployeeDTO"
-  /api/department/{id}:
-    get:
-      tags:
-      - Department API
-      summary: Shows all departments from data base
-      description: Responsible of fetching all departments that is stored in data
-        base
-      operationId: showDepartment
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int32
-      responses:
-        "200":
-          description: Success
-        "400":
-          description: Fail
-  /api/department/showAll:
-    get:
-      tags:
-      - Department API
-      summary: Shows all departments from data base
-      description: Responsible of fetching all departments that is stored in data
-        base
-      operationId: showAllDepartments
-      responses:
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DepartmentDTO"
-  /api/employee/{id}/delete:
+                $ref: "#/components/schemas/department"
+
+  /employee/{id}/delete:
     delete:
       tags:
       - Employee API
@@ -283,7 +315,7 @@ paths:
       responses:
         "200":
           description: OK
-  /api/department/{id}/delete:
+  /department/{id}/delete:
     delete:
       tags:
       - Department API
@@ -300,37 +332,27 @@ paths:
           description: OK
 components:
   schemas:
-    EmployeeDTO:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int32
-        firstName:
-          type: string
-        lastName:
-          type: string
-        email:
-          type: string
-        operational_head:
-          type: boolean
-        direct_supervisor_id:
-          type: integer
-          format: int32
-        department_id:
-          type: integer
-          format: int32
-    DepartmentDTO:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int32
-        name:
-          type: string
-        cost_center_code:
-          type: string
-        employees:
-          type: array
-          items:
-            $ref: "#/components/schemas/EmployeeDTO"
+    employeeRequest:
+      $ref: "./schemas/employee/employeeRequest.yaml"
+    employeeResponse:
+      $ref: "./schemas/employee/employeeResponse.yaml"
+    department:
+      $ref: "./schemas/department.yaml"
+    failedToCreateEmployee:
+      $ref: "./schemas/errors/employeeErrors.yaml#/failedToCreateEmployee"
+    failedToFindEmployee:
+      $ref: "./schemas/errors/employeeErrors.yaml#/failedToFindEmployee"
+    failedToSaveEmployee:
+      $ref: "./schemas/errors/employeeErrors.yaml#/failedToSaveEmployee"
+    failedToSaveSubordinate:
+      $ref: "./schemas/errors/employeeErrors.yaml#/failedToSaveSubordinate"
+    failedToFindSubordinate:
+      $ref: "./schemas/errors/employeeErrors.yaml#/failedToFindSubordinate"
+    wrongArgumentsPassed:
+      $ref: "./schemas/errors/employeeErrors.yaml#/wrongArgumentsPassed"
+    updatedEmployee:
+      $ref: "./schemas/employee/updatedEmployee.yaml"
+    updateRequestEmployee:
+      $ref: "./schemas/employee/updateRequestEmployee.yaml"
+    subordinates:
+      $ref: "./schemas/employee/subordinates.yaml"
