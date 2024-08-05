@@ -1,0 +1,37 @@
+failedToCreateDepartment:
+  type: object
+  properties:
+    code:
+      type: integer
+      example: 400
+    message:
+      type: string
+      example: "Exception occurred on attempt to create an department"
+failedToSaveDepartment:
+  type: object
+  properties:
+    code:
+      type: integer
+      example: 400
+    message:
+      type: string
+      example: "Exception occurred on attempt to save an department"
+failedToFindDepartment:
+  type: object
+  properties:
+    code:
+      type: integer
+      example: 400
+    message:
+      type: string
+      example: "Department not found"
+failedToDeleteDepartment:
+  type: object
+  properties:
+    code:
+      type: integer
+      example: 400
+    message:
+      type: string
+      example: "Exception occurred on attempt to delete department"
+

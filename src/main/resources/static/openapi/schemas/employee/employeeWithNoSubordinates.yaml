@@ -1,0 +1,29 @@
+type: object
+required:
+  - firstName
+  - lastName
+  - email
+properties:
+  firstName:
+    type: string
+    example: Joe
+  lastName:
+    type: string
+    example: Doe
+  email:
+    type: string
+    example: joe.doe@example.com
+  operational_head:
+    type: boolean
+    example: false
+  direct_supervisor_id:
+    type: integer
+    format: int32
+    example: 2
+  subordinates:
+    type: object
+    example: null
+  department_id:
+    type: integer
+    format: int32
+    example: 1

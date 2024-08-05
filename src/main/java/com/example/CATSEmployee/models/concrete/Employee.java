@@ -23,7 +23,7 @@ public class Employee extends BaseClass {
     @Column(nullable = false)
     private String lastName;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String email;
 
     private Boolean operational_head = false;

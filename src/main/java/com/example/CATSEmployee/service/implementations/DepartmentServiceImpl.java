@@ -56,7 +56,7 @@ public class DepartmentServiceImpl implements DepartmentService {
             return savedDepartment;
         }
         catch (DataIntegrityViolationException e) {
-            throw new APIRequestException("Exception occurred on attempt to create an employee" + "\nError message: " + e.getMessage(),e);
+            throw new APIRequestException("Exception occurred on attempt to create a department" + "\nError message: " + e.getMessage(),e);
         }
     }
 
