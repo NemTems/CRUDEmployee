@@ -102,7 +102,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 EmployeeDTO savedSubordinate = EmployeeMapper.toDto(employeeRepository.findById(subordinate.getId())
                         .orElseThrow(() -> new APIRequestException("Subordinate not found")));
                 try {
-                    if(!foundEmployee.hasSubordinate(savedSubordinate)) {
+                    if(foundEmployee.hasSubordinate(savedSubordinate)) {
                         foundEmployee.removeSubordinate(savedSubordinate);
                         employeeRepository.save(EmployeeMapper.toEntity(savedSubordinate));
                     }
