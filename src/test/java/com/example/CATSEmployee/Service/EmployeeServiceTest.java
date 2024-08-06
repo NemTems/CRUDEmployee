@@ -53,7 +53,7 @@ public class EmployeeServiceTest {
 
         when(employeeRepository.findAll()).thenReturn(employees);
 
-        List<EmployeeDTO> result = employeeService.getAllEmployees();
+        List<EmployeeDTO> result = employeeService.getAllEmployees(Mockito.anyInt(),Mockito.anyInt());
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(1, result.size());

@@ -20,8 +20,11 @@ public class EmployeeController {
     }
 
     @GetMapping("/showAll")
-    public ResponseEntity<List<EmployeeDTO>> showAllEmployees() {
-        return new ResponseEntity<>(employeeService.getAllEmployees(), HttpStatus.OK);
+    public ResponseEntity<List<EmployeeDTO>> showAllEmployees(
+            @RequestParam(value = "pageNo", defaultValue = "0", required = false) int offset,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int limit
+    ) {
+        return new ResponseEntity<>(employeeService.getAllEmployees(offset, limit), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")

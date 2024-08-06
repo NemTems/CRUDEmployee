@@ -7,6 +7,8 @@ import com.example.CATSEmployee.repository.EmployeeRepository;
 import com.example.CATSEmployee.service.interfaces.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -24,8 +26,10 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public List<EmployeeDTO> getAllEmployees() {
-        return employeeRepository.findAll().stream()
+    public List<EmployeeDTO> getAllEmployees(int offset, int limit) {
+        Pageable pageable = PageRequest.of(offset, limit);
+
+        return employeeRepository.findAll(pageable).getContent().stream()
                 .map(EmployeeMapper::toDto)
                 .collect(Collectors.toList());
     }
