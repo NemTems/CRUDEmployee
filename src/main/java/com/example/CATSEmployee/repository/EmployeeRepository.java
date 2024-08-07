@@ -6,13 +6,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
-
+@Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
 
-    @Query("SELECT e FROM Employee e WHERE " +
-            "(:leadId IS NULL OR (e.operational_head = TRUE AND e.id = :leadId AND e.direct_supervisor IS NULL)) AND " +
-            "(:managerId IS NULL OR (e.operational_head = FALSE AND e.id = :managerId AND e.direct_supervisor IS NOT NULL)) AND " +
+    @Query("SELECT e " +
+            "FROM Employee e " +
+            "WHERE " +
+            "(:managerId IS NULL OR (e.department.id = (SELECT emp.department.id FROM Employee emp WHERE emp.id = :managerId AND (emp.operational_head = TRUE OR emp.direct_supervisor.id IS NULL)))) AND " +
+            "(:leadId IS NULL OR (e.operational_head = FALSE AND e.direct_supervisor.id = :leadId)) AND " +
             "(:departmentId IS NULL OR e.department.id = :departmentId)")
     Page<Employee> findBySpecificParameters(
             @Param("departmentId") Integer departmentId,

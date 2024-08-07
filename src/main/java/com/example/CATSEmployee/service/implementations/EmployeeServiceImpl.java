@@ -50,16 +50,16 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional
     @Override
     public EmployeeDTO createEmployee(EmployeeDTO employeeDTO) {
-
         try {
-            // Saved to get an id from db
+            // Save to get an id from database
             EmployeeDTO savedEmployeeDTO = EmployeeMapper.toDto(employeeRepository.save(EmployeeMapper.toEntity(employeeDTO)));
-            EmployeeDTO savedDirectSupervisor = getEmployeeById(savedEmployeeDTO.getDirect_supervisor_id());
-
-            if (savedEmployeeDTO.getId() == savedDirectSupervisor.getId() || savedEmployeeDTO.getDirect_supervisor_id() == 0) {
+            if (savedEmployeeDTO.getDirect_supervisor_id() == 0) {
                 savedEmployeeDTO.setOperational_head(true);
-                savedEmployeeDTO.setDirect_supervisor_id(0);
-            } else { // Sets the operational head to false and adds the main object as a subordinate to a referenced Employee
+            } else {
+                EmployeeDTO savedDirectSupervisor = getEmployeeById(savedEmployeeDTO.getDirect_supervisor_id());
+                if (savedEmployeeDTO.getId() == savedDirectSupervisor.getId()) {
+                    throw new APIRequestException("Employee cannot be his own supervisor");
+                }
                 savedEmployeeDTO.setOperational_head(false);
                 addSubordinates(List.of(savedEmployeeDTO), savedDirectSupervisor.getId());
             }

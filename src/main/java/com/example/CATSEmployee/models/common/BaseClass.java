@@ -18,6 +18,6 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 public class BaseClass {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
 }

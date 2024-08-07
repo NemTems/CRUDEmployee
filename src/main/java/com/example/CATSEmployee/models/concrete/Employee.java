@@ -29,12 +29,12 @@ public class Employee extends BaseClass {
     private Boolean operational_head = false;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.DETACH, mappedBy = "direct_supervisor")
-    @JsonBackReference
+    @JsonManagedReference
     private List<Employee> subordinates = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.DETACH)
     @JoinColumn(name = "direct_supervisor_id")
-    @JsonManagedReference
+    @JsonBackReference
     private Employee direct_supervisor;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.DETACH)
