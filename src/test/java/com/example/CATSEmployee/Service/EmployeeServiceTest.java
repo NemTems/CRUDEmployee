@@ -14,6 +14,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,12 +39,14 @@ public class EmployeeServiceTest {
     @BeforeEach
     public void setUp() {
         employeeDTO = EmployeeDTO.builder()
+                .id(1)
                 .firstName("John")
                 .lastName("Doe")
                 .email("john.doe@example.com")
                 .build();
 
         employee = Employee.builder()
+                .id(1)
                 .firstName("John")
                 .lastName("Doe")
                 .email("john.doe@example.com")
@@ -51,9 +57,10 @@ public class EmployeeServiceTest {
     public void getAllEmployees_ShouldReturnAllEmployees_ListOfEmployees() {
         List<Employee> employees = List.of(employee);
 
-        when(employeeRepository.findAll()).thenReturn(employees);
+        Pageable pageable = PageRequest.of(0, 1);
+        when(employeeRepository.findAll(pageable)).thenReturn(new PageImpl<>(employees));
 
-        List<EmployeeDTO> result = employeeService.getAllEmployees(Mockito.anyInt(),Mockito.anyInt());
+        List<EmployeeDTO> result = employeeService.getAllEmployees(0,1, null,null,null);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(1, result.size());
@@ -192,10 +199,21 @@ public class EmployeeServiceTest {
 
     @Test
     public void addSubordinates_ShouldAddSubordinatesToEmployee_UpdatedEmployee() {
-        when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(employee));
+        Employee subordinate = Employee.builder()
+                .id(2)
+                .firstName("Bob")
+                .build();
+
+        EmployeeDTO subordinateDTO = EmployeeDTO.builder()
+                .id(2)
+                .firstName("Bob")
+                .build();
+
+        when(employeeRepository.findById(1)).thenReturn(Optional.of(employee));
+        when(employeeRepository.findById(2)).thenReturn(Optional.of(subordinate));
         when(employeeRepository.save(Mockito.any(Employee.class))).thenReturn(employee);
 
-        EmployeeDTO updatedEmployee = employeeService.addSubordinates(List.of(employeeDTO), 1);
+        EmployeeDTO updatedEmployee = employeeService.addSubordinates(List.of(subordinateDTO), 1);
 
         verify(employeeRepository, times(2)).findById(Mockito.anyInt());
         verify(employeeRepository, times(2)).save(Mockito.any(Employee.class));
@@ -218,11 +236,22 @@ public class EmployeeServiceTest {
 
     @Test
     public void addSubordinates_ShouldThrowException_DoesntHaveSubordinate_WhenSubordinateSaveFails() {
-        when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(employee));
+        Employee subordinate = Employee.builder()
+                .id(2)
+                .firstName("Bob")
+                .build();
+
+        EmployeeDTO subordinateDTO = EmployeeDTO.builder()
+                .id(2)
+                .firstName("Bob")
+                .build();
+
+        when(employeeRepository.findById(1)).thenReturn(Optional.of(employee));
+        when(employeeRepository.findById(2)).thenReturn(Optional.of(subordinate));
         when(employeeRepository.save(any(Employee.class))).thenThrow(new DataIntegrityViolationException("Error saving employee"));
 
         APIRequestException exception = Assertions.assertThrows(APIRequestException.class, () -> {
-            employeeService.addSubordinates(List.of(employeeDTO), 1);
+            employeeService.addSubordinates(List.of(subordinateDTO), 1);
         });
 
         Assertions.assertTrue(exception.getMessage().contains("Exception occurred on attempt to save subordinate with id:"));

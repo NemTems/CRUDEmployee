@@ -21,10 +21,14 @@ public class EmployeeController {
 
     @GetMapping("/showAll")
     public ResponseEntity<List<EmployeeDTO>> showAllEmployees(
-            @RequestParam(value = "pageNo", defaultValue = "0", required = false) int offset,
-            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int limit
+            @RequestParam(value = "offset", defaultValue = "0", required = false) int offset,
+            @RequestParam(value = "limit", defaultValue = "10", required = false) int limit,
+            @RequestParam(value = "department_id", required = false) Integer departmentId,
+            @RequestParam(value = "manager_id", required = false) Integer managerId,
+            @RequestParam(value = "lead_id", required = false) Integer leadId
     ) {
-        return new ResponseEntity<>(employeeService.getAllEmployees(offset, limit), HttpStatus.OK);
+
+        return new ResponseEntity<>(employeeService.getAllEmployees(offset, limit, departmentId, managerId, leadId), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")

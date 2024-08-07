@@ -5,7 +5,7 @@ import com.example.CATSEmployee.DTO.concrete.EmployeeDTO;
 import java.util.List;
 
 public interface EmployeeService {
-    List<EmployeeDTO> getAllEmployees(int offset, int limit);
+    List<EmployeeDTO> getAllEmployees(int offset, int limit, Integer departmentId, Integer managerId, Integer leadId);
 
     EmployeeDTO getEmployeeById(int id);
 

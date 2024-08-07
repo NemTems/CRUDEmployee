@@ -26,12 +26,19 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public List<EmployeeDTO> getAllEmployees(int offset, int limit) {
+    public List<EmployeeDTO> getAllEmployees(int offset, int limit, Integer departmentId, Integer managerId, Integer leadId) {
         Pageable pageable = PageRequest.of(offset, limit);
 
+        if(Objects.isNull(departmentId) && Objects.isNull(managerId) && Objects.isNull(leadId)){
         return employeeRepository.findAll(pageable).getContent().stream()
                 .map(EmployeeMapper::toDto)
                 .collect(Collectors.toList());
+        }
+        else{
+            return employeeRepository.findBySpecificParameters(departmentId, managerId, leadId, pageable).stream()
+                    .map(EmployeeMapper::toDto)
+                    .collect(Collectors.toList());
+        }
     }
 
     @Override
@@ -43,16 +50,17 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional
     @Override
     public EmployeeDTO createEmployee(EmployeeDTO employeeDTO) {
+
         try {
             // Saved to get an id from db
             EmployeeDTO savedEmployeeDTO = EmployeeMapper.toDto(employeeRepository.save(EmployeeMapper.toEntity(employeeDTO)));
+            EmployeeDTO savedDirectSupervisor = getEmployeeById(savedEmployeeDTO.getDirect_supervisor_id());
 
-            if (savedEmployeeDTO.getDirect_supervisor_id() == 0) {
+            if (savedEmployeeDTO.getId() == savedDirectSupervisor.getId() || savedEmployeeDTO.getDirect_supervisor_id() == 0) {
                 savedEmployeeDTO.setOperational_head(true);
-            }
-            else { // Sets the operational head to false and adds the main object as a subordinate to a referenced Employee
+                savedEmployeeDTO.setDirect_supervisor_id(0);
+            } else { // Sets the operational head to false and adds the main object as a subordinate to a referenced Employee
                 savedEmployeeDTO.setOperational_head(false);
-                EmployeeDTO savedDirectSupervisor = getEmployeeById(savedEmployeeDTO.getDirect_supervisor_id());
                 addSubordinates(List.of(savedEmployeeDTO), savedDirectSupervisor.getId());
             }
             addSubordinates(savedEmployeeDTO.getSubordinates(), savedEmployeeDTO.getId());
@@ -77,7 +85,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 EmployeeDTO savedSubordinate = EmployeeMapper.toDto(employeeRepository.findById(subordinate.getId())
                         .orElseThrow(() -> new APIRequestException("Subordinate not found")));
                 try {
-                    if(!foundEmployee.hasSubordinate(savedSubordinate)) {
+                    if(!foundEmployee.hasSubordinate(savedSubordinate) && savedSubordinate.getId() != foundEmployee.getId()) {
                         foundEmployee.addSubordinate(savedSubordinate);
                         employeeRepository.save(EmployeeMapper.toEntity(savedSubordinate));
                     }

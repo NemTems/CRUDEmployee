@@ -53,7 +53,7 @@ public class EmployeeControllerTest {
 
     @Test
     public void showAllEmployees_ShouldReturnAllEmployees() throws Exception {
-        when(employeeService.getAllEmployees(Mockito.anyInt(), Mockito.anyInt())).thenReturn(List.of(employeeDTO));
+        when(employeeService.getAllEmployees(0, 10, null, null, null)).thenReturn(List.of(employeeDTO));
         ResultActions response = mockMvc.perform(get("/api/employee/showAll")
                 .contentType(MediaType.APPLICATION_JSON));
 
