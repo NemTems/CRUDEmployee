@@ -1,0 +1,8 @@
+name: lead_id
+in: query
+schema:
+  type: string
+description: >
+  Leader is a direct supervisor.
+  lead_id is used to filter records by a direct supervisor.
+  In the result, returns a list of a subordinates of the specific supervisor.

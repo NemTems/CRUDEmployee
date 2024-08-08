@@ -1,0 +1,8 @@
+name: manager_id
+in: query
+schema:
+  type: string
+description: >
+  Manager is an operational head of the department, and have no direct supervisor.
+  manager_id is used to filter records by an operational head of the department.
+  In the result, returns list of all employees within manager's department.

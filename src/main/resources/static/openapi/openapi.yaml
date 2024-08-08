@@ -100,6 +100,12 @@ paths:
       operationId: showAllEmployees
       summary: Get a list of all employees
       description: Use this endpoint when you need to get all employees in the database.
+      parameters:
+        - $ref: './schemas/parameters/offset.yaml'
+        - $ref: './schemas/parameters/limit.yaml'
+        - $ref: './schemas/parameters/lead_id.yaml'
+        - $ref: './schemas/parameters/manager_id.yaml'
+        - $ref: './schemas/parameters/department_id.yaml'
       responses:
         "200":
           description: OK

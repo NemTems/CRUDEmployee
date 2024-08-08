@@ -1,0 +1,7 @@
+name: department_id
+in: query
+schema:
+  type: string
+description: >
+  department_id is used to filter records by a department.
+  In the result, returns list of all employees within specific department.
