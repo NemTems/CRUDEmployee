@@ -10,8 +10,16 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 public class LoginResponse {
-    private String jwtToken;
-
     private String username;
+    private String jwtToken;
     private List<String> roles;
+
+    @Override
+    public String toString() {
+        return "LoginResponse{" +
+                "jwtToken='" + jwtToken + '\'' +
+                ", username='" + username + '\'' +
+                ", roles=" + roles +
+                '}';
+    }
 }

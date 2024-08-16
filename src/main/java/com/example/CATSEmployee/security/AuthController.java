@@ -1,11 +1,9 @@
 package com.example.CATSEmployee.security;
 
-import com.example.CATSEmployee.security.jwt.JwtUtils;
 import com.example.CATSEmployee.security.jwt.LoginRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,23 +11,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AuthController {
 
-    private final JwtUtils jwtUtils;
+    private final AuthServiceImpl authService;
 
-    private final AuthenticationManager authenticationManager;
-
-    @Autowired
-    public AuthController(JwtUtils jwtUtils, AuthenticationManager authenticationManager) {
-        this.jwtUtils = jwtUtils;
-        this.authenticationManager = authenticationManager;
+    public AuthController(AuthServiceImpl authService) {
+        this.authService = authService;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerNewUser(@RequestBody LoginRequest loginRequest) {
-        return new ResponseEntity<>("User registered successfully", HttpStatus.OK);
+    public ResponseEntity<?> registerNewUser(@RequestBody LoginRequest loginRequest) {
+        return new ResponseEntity<>(authService.register(loginRequest), HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
-        return new ResponseEntity<>("User logged in successfully", HttpStatus.OK);
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) throws JsonProcessingException {
+        return new ResponseEntity<>(authService.login(loginRequest).toString(), HttpStatus.OK);
     }
 }

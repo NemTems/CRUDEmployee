@@ -38,7 +38,7 @@ paths:
                   - $ref: "#/components/schemas/failedToFindEmployee"
                   - $ref: "#/components/schemas/failedToFindSubordinate"
                   - $ref: "#/components/schemas/failedToSaveSubordinate"
-  /api/department/create:
+  /department/create:
     post:
       tags:
         - Department API
