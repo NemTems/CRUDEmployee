@@ -14,7 +14,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -103,18 +102,22 @@ public class EmployeeServiceTest {
 
     @Test
     public void createEmployee_ShouldCreateNewEmployee_DirectSupervisorNotZero_NewEmployee() {
-        employee.setId(1);
-        employee.setDirect_supervisor(employee);
+        Employee supervisor = Employee.builder()
+                .id(2)
+                .firstName("Dobby")
+                .build();
+        employee.setDirect_supervisor(supervisor);
 
         when(employeeRepository.save(Mockito.any(Employee.class))).thenReturn(employee);
-        when(employeeRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(employee));
+        when(employeeRepository.findById(1)).thenReturn(Optional.of(employee));
+        when(employeeRepository.findById(2)).thenReturn(Optional.of(supervisor));
 
         EmployeeDTO createdEmployee = employeeService.createEmployee(employeeDTO);
 
         Assertions.assertNotNull(createdEmployee);
         Assertions.assertEquals(employeeDTO.getFirstName(), createdEmployee.getFirstName());
         Assertions.assertEquals(false, createdEmployee.getOperational_head());
-        Assertions.assertEquals(1, createdEmployee.getDirect_supervisor_id());
+        Assertions.assertEquals(2, createdEmployee.getDirect_supervisor_id());
     }
 
     @Test

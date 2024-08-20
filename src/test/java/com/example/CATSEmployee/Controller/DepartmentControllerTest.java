@@ -2,6 +2,7 @@ package com.example.CATSEmployee.Controller;
 
 import com.example.CATSEmployee.DTO.concrete.DepartmentDTO;
 import com.example.CATSEmployee.DTO.concrete.EmployeeDTO;
+import com.example.CATSEmployee.TestSecurityConfig;
 import com.example.CATSEmployee.controller.DepartmentController;
 import com.example.CATSEmployee.models.concrete.Department;
 import com.example.CATSEmployee.models.concrete.Employee;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -32,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 @WebMvcTest(controllers = DepartmentController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import(TestSecurityConfig.class)
 public class DepartmentControllerTest {
     @Autowired
     private MockMvc mockMvc;

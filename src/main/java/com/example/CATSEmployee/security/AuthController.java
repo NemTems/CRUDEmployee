@@ -6,9 +6,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/api/auth")
 public class AuthController {
 
     private final AuthServiceImpl authService;
@@ -23,7 +25,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) throws JsonProcessingException {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         return new ResponseEntity<>(authService.login(loginRequest).toString(), HttpStatus.OK);
     }
 }

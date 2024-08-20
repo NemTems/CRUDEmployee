@@ -30,8 +30,7 @@ public class DepartmentDTO extends BaseClass {
 
     public boolean hasEmployee(EmployeeDTO employeeDTO) {
         Optional<EmployeeDTO> existingSubordinate = employees.stream()
-                .filter(emp -> emp.getId() == employeeDTO.getId() && emp.getFirstName() != null
-                && this.getId() != employeeDTO.getId())
+                .filter(emp -> emp.getId() == employeeDTO.getId() && emp.getFirstName() != null)
                 .findFirst();
 
         return existingSubordinate.isPresent();
