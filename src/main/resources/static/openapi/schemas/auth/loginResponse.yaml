@@ -1,0 +1,13 @@
+type: object
+properties:
+  username:
+    type: string
+    example: exampleUser
+  jwtToken:
+    type: string
+    example: eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTcyNDA3MTgxNywiZXhwIjoxNzI0MDc1NDE3fQ.xpqR0kVluZQzHKQpSo_jnYSh6dyW46W-73aQbm4FALDbAY8Iaj1MzRMjeHDA5TP4
+  roles:
+    type: array
+    items:
+      type: string
+      example: ROLE_USER

@@ -8,13 +8,81 @@ info:
 servers:
 - url: http://localhost:8080/api/
   description: Local server
+security:
+  - BearerAuth: []
 paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      description: Register a new user with a username and password.
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/loginRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User Bobby1991 registered successfully"
+        '400':
+          description: Bad request - Username already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Username already exists
+  /auth/login:
+    post:
+      summary: Authenticate a user
+      description: Authenticate a user using a username and password.
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/loginRequest'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/loginResponse"
+        '400':
+          description: Bad credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Bad credentials
   /employee/create:
     post:
       tags:
         - Employee API
       summary: Create a new employee
-      description: In the request, for subordinates only "id" field should be filled, as it refers to an existing employee. Direct supervisor and subordinates are employees, that should already exist in the database. Department should also exist in the database. Use this endpoint when you need to create a new employee
+      description: |
+        ONLY WITH ADMIN ACCESS.\
+        In the request, for subordinates only "id" field should be filled, as it refers to an existing employee. Direct supervisor and subordinates are employees, that should already exist in the database. Department should also exist in the database. Use this endpoint when you need to create a new employee
       operationId: createEmployee
       requestBody:
         content:
@@ -38,13 +106,28 @@ paths:
                   - $ref: "#/components/schemas/failedToFindEmployee"
                   - $ref: "#/components/schemas/failedToFindSubordinate"
                   - $ref: "#/components/schemas/failedToSaveSubordinate"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unauthorizedError"
+        "403":
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/forbiddenError"
+
   /department/create:
     post:
       tags:
         - Department API
       operationId: createDepartment
       summary: Create a new department
-      description: In the request, for employees only "id" field should be filled, as it refers to an existing employee. Employees should already exist in the database. Use this endpoint when you need to create a new employee
+      description: |
+        ONLY WITH ADMIN ACCESS.\
+        In the request, for employees only "id" field should be filled, as it refers to an existing employee. Employees should already exist in the database. Use this endpoint when you need to create a new department
       requestBody:
         content:
           application/json:
@@ -66,6 +149,18 @@ paths:
                   - $ref: "#/components/schemas/failedToSaveDepartment"
                   - $ref: "#/components/schemas/failedToFindEmployee"
                   - $ref: "#/components/schemas/failedToSaveEmployee"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unauthorizedError"
+        "403":
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/forbiddenError"
   /employee/{id}:
     get:
       tags:
@@ -93,6 +188,12 @@ paths:
             'application/json':
               schema:
                 $ref: "#/components/schemas/failedToFindEmployee"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unauthorizedError"
   /employee/showAll:
     get:
       tags:
@@ -115,6 +216,12 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/employeeWithSubordinates"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unauthorizedError"
   /department/{id}:
     get:
       tags:
@@ -144,6 +251,12 @@ paths:
               schema:
                 type: object
                 $ref: "#/components/schemas/failedToFindDepartment"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unauthorizedError"
   /department/showAll:
     get:
       tags:
@@ -160,13 +273,20 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/departmentWithEmployees"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unauthorizedError"
   /employee/{id}/update:
     put:
       tags:
       - Employee API
       operationId: updateEmployee
       summary: Change employee by id
-      description:
+      description: |
+        ONLY WITH ADMIN ACCESS.\
         Only specified fields will be changed, all others will remain the same.
         Employee should already exist in the database. Use this endpoint when you need to change employee by id.
       parameters:
@@ -197,13 +317,26 @@ paths:
                   - $ref: "#/components/schemas/failedToFindEmployee"
                   - $ref: "#/components/schemas/failedToSaveEmployee"
                   - $ref: "#/components/schemas/wrongArgumentsPassed"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unauthorizedError"
+        "403":
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/forbiddenError"
   /employee/{id}/add/subordinates:
     put:
       tags:
         - Employee API
       operationId: addSubordinatesToEmployee
       summary: Adds a subordinate to a specific employee by id.
-      description:
+      description: |
+        ONLY WITH ADMIN ACCESS.\
         A subordinate is an employee who reports directly to a supervisor, who is also an employee. Both the subordinate
         and the direct supervisor should already exist in the database. In the request, only the "id" field should be filled, as 
         it refers to an existing employee. Use this endpoint to assign an employee as a subordinate to another employee.
@@ -237,13 +370,26 @@ paths:
                   - $ref: "#/components/schemas/failedToFindSubordinate"
                   - $ref: "#/components/schemas/failedToSaveSubordinate"
                   - $ref: "#/components/schemas/failedToSaveEmployee"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unauthorizedError"
+        "403":
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/forbiddenError"
   /employee/{id}/remove/subordinates:
     put:
       tags:
       - Employee API
       operationId: removeSubordinateFromEmployee
       summary: Removes a subordinate from a specific employee by id.
-      description:
+      description: |
+        ONLY WITH ADMIN ACCESS.\
         A subordinate is an employee who reports directly to a supervisor, who is also an employee. Both the subordinate
         and the direct supervisor should already exist in the database. In the request, only the "id" field should be filled, as 
         it refers to an existing employee. If the specified subordinate is not currently assigned to the chosen supervisor,
@@ -278,13 +424,26 @@ paths:
                   - $ref: "#/components/schemas/failedToFindSubordinate"
                   - $ref: "#/components/schemas/failedToSaveSubordinate"
                   - $ref: "#/components/schemas/failedToSaveEmployee"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unauthorizedError"
+        "403":
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/forbiddenError"
   /department/{id}/update:
     put:
       tags:
       - Department API
       operationId: updateDepartment
       summary: Change department by id
-      description:
+      description: |
+        ONLY WITH ADMIN ACCESS.\
         Only specified fields will be changed, all others will remain the same.
         Department should already exist in the database. Use this endpoint when you need to change department by id.
       parameters:
@@ -315,13 +474,26 @@ paths:
                   - $ref: "#/components/schemas/failedToFindDepartment"
                   - $ref: "#/components/schemas/failedToSaveDepartment"
                   - $ref: "#/components/schemas/wrongArgumentsPassed"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unauthorizedError"
+        "403":
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/forbiddenError"
   /department/{id}/add/employees:
     put:
       tags:
       - Department API
       operationId: addEmployeesToDepartment
       summary: Adds an employee to a specific department by id.
-      description:
+      description: |
+        ONLY WITH ADMIN ACCESS.\
         Both the employee and the department should already exist in the database. In the request, only the "id" field 
         should be filled, as it refers to an existing employee. Use this endpoint to add an employee to a department.
       parameters:
@@ -354,13 +526,26 @@ paths:
                   - $ref: "#/components/schemas/failedToFindEmployee"
                   - $ref: "#/components/schemas/failedToSaveEmployee"
                   - $ref: "#/components/schemas/failedToSaveDepartment"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unauthorizedError"
+        "403":
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/forbiddenError"
   /department/{id}/remove/employees:
     put:
       tags:
         - Department API
       operationId: removeEmployeesFromDepartment
       summary: Removes an employee from a specific department by id.
-      description:
+      description: |
+        ONLY WITH ADMIN ACCESS.\
         Both the employee and the department should already exist in the database. In the request, only the "id" field
         should be filled, as it refers to an existing employee. If the specified employee is not currently part of the 
         chosen department, no changes will be made. Use this endpoint to remove an employee from a specific department.
@@ -394,13 +579,26 @@ paths:
                   - $ref: "#/components/schemas/failedToFindEmployee"
                   - $ref: "#/components/schemas/failedToSaveEmployee"
                   - $ref: "#/components/schemas/failedToSaveDepartment"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unauthorizedError"
+        "403":
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/forbiddenError"
   /employee/{id}/delete:
     delete:
       tags:
       - Employee API
       operationId: deleteEmployee
       summary: Delete an employee by id
-      description:
+      description: |
+        ONLY WITH ADMIN ACCESS.\
         Before deleting employee from the database, make sure that it has no direct supervisor and no subordinates.
         Use this endpoint when you need to remove specific employee by id.
       parameters:
@@ -421,15 +619,28 @@ paths:
                   oneOf:
                     - $ref: "#/components/schemas/failedToDeleteEmployee"
                     - $ref : "#/components/schemas/failedToFindEmployee"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unauthorizedError"
+        "403":
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/forbiddenError"
   /department/{id}/delete:
     delete:
       tags:
       - Department API
       operationId: deleteDepartment
       summary: Delete a department by id
-      description:
+      description: |
+        ONLY WITH ADMIN ACCESS.\
         Before deleting department from the database, make sure that it has no employees.
-        Use this endpoint when you need to remove specific employee by id.
+        Use this endpoint when you need to remove specific department by id.
       parameters:
       - name: id
         in: path
@@ -448,7 +659,24 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/failedToDeleteDepartment"
                   - $ref: "#/components/schemas/failedToFindDepartment"
+        "401":
+          description: Unauthorized - Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unauthorizedError"
+        "403":
+          description: Forbidden - User does not have the necessary permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/forbiddenError"
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     employeeRequest:
       $ref: "./schemas/employee/employeeRequest.yaml"
@@ -497,3 +725,11 @@ components:
     wrongArgumentsPassed:
       $ref: "./schemas/errors/employeeErrors.yaml#/wrongArgumentsPassed"
 
+    loginRequest:
+      $ref: "./schemas/auth/loginRequest.yaml"
+    loginResponse:
+      $ref: "./schemas/auth/loginResponse.yaml"
+    unauthorizedError:
+      $ref: "./schemas/errors/authenticationErrors.yaml#/unauthorizedError"
+    forbiddenError:
+      $ref: "./schemas/errors/authenticationErrors.yaml#/forbiddenError"

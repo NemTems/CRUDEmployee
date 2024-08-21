@@ -1,0 +1,19 @@
+unauthorizedError:
+  type: object
+  properties:
+    code:
+      type: integer
+      example: 401
+    message:
+      type: string
+      example: "Full authentication is required to access this resource"
+
+forbiddenError:
+  type: object
+  properties:
+    code:
+      type: integer
+      example: 403
+    message:
+      type: string
+      example: "Forbidden"
