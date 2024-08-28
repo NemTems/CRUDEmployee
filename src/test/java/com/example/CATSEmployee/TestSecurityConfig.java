@@ -13,12 +13,12 @@ public class TestSecurityConfig {
     @Bean
     @Primary
     public JwtUtils jwtUtils() {
-        return Mockito.mock(JwtUtils.class); // Mock JwtUtils to prevent real JWT validation
+        return Mockito.mock(JwtUtils.class);
     }
 
     @Bean
     @Primary
     public UserDetailsService userDetailsService() {
-        return Mockito.mock(UserDetailsService.class); // Mock UserDetailsService if used in your security configuration
+        return Mockito.mock(UserDetailsService.class);
     }
 }

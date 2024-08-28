@@ -4,7 +4,6 @@ import com.example.CATSEmployee.exception.APIRequestException;
 import com.example.CATSEmployee.security.jwt.JwtUtils;
 import com.example.CATSEmployee.security.jwt.LoginRequest;
 import com.example.CATSEmployee.security.jwt.LoginResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,7 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.stereotype.Service;
 
-import javax.sql.DataSource;
 import java.util.List;
 
 @Service
@@ -28,15 +26,15 @@ public class AuthServiceImpl implements AuthService {
 
     private final AuthenticationManager authenticationManager;
 
-    private final DataSource dataSource;
+    private final JdbcUserDetailsManager userDetailsManager;
 
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AuthServiceImpl(JwtUtils jwtUtils, AuthenticationManager authenticationManager, DataSource dataSource, PasswordEncoder passwordEncoder, ObjectMapper objectMapper) {
+    public AuthServiceImpl(JwtUtils jwtUtils, AuthenticationManager authenticationManager, JdbcUserDetailsManager userDetailsManager, PasswordEncoder passwordEncoder) {
         this.jwtUtils = jwtUtils;
         this.authenticationManager = authenticationManager;
-        this.dataSource = dataSource;
+        this.userDetailsManager = userDetailsManager;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -59,7 +57,11 @@ public class AuthServiceImpl implements AuthService {
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
-        return new LoginResponse(userDetails.getUsername(), jwtToken, roles);
+        return LoginResponse.builder()
+                .username(userDetails.getUsername())
+                .jwtToken(jwtToken)
+                .roles(roles)
+                .build();
     }
 
     @Override
@@ -69,7 +71,6 @@ public class AuthServiceImpl implements AuthService {
                 .roles("USER")
                 .build();
 
-        JdbcUserDetailsManager userDetailsManager = new JdbcUserDetailsManager(dataSource);
         if(userDetailsManager.userExists(newUser.getUsername())){
             throw new APIRequestException("Username already exists");
         }
