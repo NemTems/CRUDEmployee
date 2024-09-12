@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+  app:
+    restart: unless-stopped
+    image: catsemployee:1.0.0
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/cats_employee_db?allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: root
+    depends_on:
+      - mysqldb
+
+  mysqldb:
+    image: mysql:8.0.37
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: cats_employee_db
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: root
